@@ -1,16 +1,17 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends
+from sqlalchemy.orm import Session
+from typing import List
+from database import engine, get_db
+from models import Base, Todo
+from schemas import TodoCreate, TodoResponse
+
+# Create database tables
+Base.metadata.create_all(bind=engine)
 
 # FastAPI application instance
 app = FastAPI(
-    title="Todo API", description="A simple todo application API", version="1.0.0"
+    title="Todo API", description="A simple todo application API", version="1.0.1"
 )
-
-# Temporary in-memory storage
-todos = [
-    {"id": 1, "title": "Learn FastAPI", "completed": False},
-    {"id": 2, "title": "Build Todo App", "completed": False},
-    {"id": 3, "title": "Deploy to Kubernetes", "completed": False},
-]
 
 
 # Health check endpoint - verify API is running
@@ -24,10 +25,35 @@ def health_check():
 
 
 # Get all todos endpoint
-@app.get("/api/todos")
-def get_todos():
+@app.get("/api/todos", response_model=List[TodoResponse])
+def get_todos(db: Session = Depends(get_db)):
     """
-    Retrieve all todos.
+    Retrieve all todos from database.
     Returns a list of all todo items.
     """
-    return {"todos": todos}
+    todos = db.query(Todo).all()
+    return todos
+
+
+# Create new todo endpoint
+@app.post("/api/todos", response_model=TodoResponse, status_code=201)
+def create_todo(todo: TodoCreate, db: Session = Depends(get_db)):
+    """
+    Create a new todo item.
+
+    Args:
+        todo: Todo data from request body
+        db: Database session
+
+    Returns:
+        Created todo item
+    """
+    # Create new Todo instance
+    db_todo = Todo(title=todo.title, completed=todo.completed)
+
+    # Add to database
+    db.add(db_todo)
+    db.commit()
+    db.refresh(db_todo)
+
+    return db_todo
