@@ -1,0 +1,57 @@
+# INFRASTRUCTURE .gitignore - Terraform, Kubernetes, Helm, Docker
+
+# Terraform
+*.tfstate
+*.tfstate.*
+*.tfstate.backup
+.terraform/
+.terraform.lock.hcl
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+crash.log
+crash.*.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+terraform.tfplan
+terraform.tfplan.*
+
+# Terraform modules cache
+**/.terraform/*
+
+# Helm
+*.tgz
+charts/*/charts/
+charts/*/tmpcharts/
+
+# Kubernetes
+kubeconfig
+*.kubeconfig
+
+# ArgoCD
+argocd-values.yaml
+argocd-secret.yaml
+
+# Docker
+docker-compose.override.yml
+.docker/
+*.dockerignore
+
+# Azure
+*.azurerm
+.azure/
+
+# Secrets & Certificates
+*.pem
+*.key
+*.crt
+secrets.yaml
+*-secret.yaml
+
+# Environment specific
+environments/*/secrets/
