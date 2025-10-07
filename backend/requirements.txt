@@ -1,0 +1,14 @@
+# FastAPI - Modern web framework for building APIs
+fastapi==0.118.0
+
+# Uvicorn - ASGI server to run FastAPI
+uvicorn[standard]==0.37.0
+
+# SQLAlchemy - ORM for database interactions
+sqlalchemy==2.0.43
+
+# Pydantic Settings - Environment variable management
+pydantic-settings==2.11.0
+
+# PostgreSQL driver
+psycopg2-binary==2.9.10
