@@ -1,0 +1,95 @@
+# PostgreSQL Deployment - Manages database Pod
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres
+  namespace: todo-app
+  labels:
+    app: postgres
+spec:
+  # Only 1 replica - PostgreSQL can't run in HA mode without extra setup
+  replicas: 1
+
+  # Selector - Which Pods does this Deployment manage?
+  selector:
+    matchLabels:
+      app: postgres
+
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: postgres:16-alpine
+
+          # Environment variables from Secret
+          env:
+            - name: POSTGRES_USER
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-password
+            - name: POSTGRES_DB
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: postgres-db
+
+          # Container port (internal to Pod)
+          ports:
+            - containerPort: 5432
+              name: postgres
+
+          # Mount PVC to container path
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+              subPath: postgres # Avoid permission issues
+
+          # Resource limits - Prevent one Pod from consuming all cluster resources
+          resources:
+            requests:
+              memory: '256Mi' # Minimum guaranteed
+              cpu: '250m' # 0.25 CPU cores
+            limits:
+              memory: '512Mi' # Maximum allowed
+              cpu: '500m'
+
+          # Liveness probe - Is container healthy?
+          livenessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - todo_user
+                - -d
+                - todo_db
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+          # Readiness probe - Is container ready to accept traffic?
+          readinessProbe:
+            exec:
+              command:
+                - pg_isready
+                - -U
+                - todo_user
+                - -d
+                - todo_db
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+      # Volumes - Connect PVC to Deployment
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc

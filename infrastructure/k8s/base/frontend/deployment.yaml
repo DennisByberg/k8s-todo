@@ -1,0 +1,74 @@
+# Frontend Deployment - Manages Next.js application Pods
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: todo-app
+  labels:
+    app: frontend
+spec:
+  # Run 2 replicas
+  replicas: 2
+
+  selector:
+    matchLabels:
+      app: frontend
+      tier: web
+
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  template:
+    metadata:
+      labels:
+        app: frontend
+        tier: web
+    spec:
+      containers:
+        - name: frontend
+          # TODO: Replace with ACR image
+          image: todo-frontend:latest
+          imagePullPolicy: IfNotPresent
+
+          ports:
+            - containerPort: 3000
+              name: http
+              protocol: TCP
+
+          # Environment variables
+          env:
+            # Point to backend Service (internal DNS)
+            - name: NEXT_PUBLIC_API_URL
+              value: 'http://backend:8000'
+            - name: NODE_ENV
+              value: 'production'
+
+          # Resource limits
+          resources:
+            requests:
+              memory: '128Mi' # Lower for production build
+              cpu: '100m'
+            limits:
+              memory: '256Mi' # Much less than development
+              cpu: '500m'
+
+          # Liveness probe
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+
+          # Readiness probe
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 3000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 3

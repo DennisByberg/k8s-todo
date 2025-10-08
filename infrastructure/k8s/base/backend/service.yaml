@@ -1,0 +1,27 @@
+# Backend Service - Load balancer for backend Pods
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: todo-app
+  labels:
+    app: backend
+    tier: api
+spec:
+  # ClusterIP - Internal service (not exposed externally)
+  type: ClusterIP
+
+  # Selector - Route to Pods with these labels
+  selector:
+    app: backend
+    tier: api
+
+  # Ports
+  ports:
+    - name: http
+      port: 8000 # Service port
+      targetPort: 8000 # Container port
+      protocol: TCP
+
+  # Session affinity - Optional, stick requests to same Pod
+  # sessionAffinity: ClientIP

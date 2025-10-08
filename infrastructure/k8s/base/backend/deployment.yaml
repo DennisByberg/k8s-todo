@@ -1,0 +1,85 @@
+# Backend Deployment - Manages FastAPI application Pods
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: todo-app
+  labels:
+    app: backend
+    tier: api
+spec:
+  # Run 2 replicas for high availability
+  replicas: 2
+
+  # Selector - Match Pods with these labels
+  selector:
+    matchLabels:
+      app: backend
+      tier: api
+
+  # Rolling update strategy - Update without downtime
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1 # Max 1 extra Pod during update
+      maxUnavailable: 0 # Never go below desired replicas
+
+  # Pod template
+  template:
+    metadata:
+      labels:
+        app: backend
+        tier: api
+    spec:
+      containers:
+        - name: backend
+          # TODO: Replace with ACR image after building
+          image: todo-backend:latest
+          imagePullPolicy: IfNotPresent
+
+          # Container port
+          ports:
+            - containerPort: 8000
+              name: http
+              protocol: TCP
+
+          # Environment variables
+          env:
+            - name: ENVIRONMENT
+              value: 'production'
+
+            # Database connection - Uses postgres Service DNS name
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret
+                  key: database-url
+
+          # Resource limits
+          resources:
+            requests:
+              memory: '128Mi'
+              cpu: '100m'
+            limits:
+              memory: '256Mi'
+              cpu: '500m'
+
+          # Liveness probe - Restart if unhealthy
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+
+          # Readiness probe - Don't send traffic until ready
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 2

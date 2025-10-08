@@ -1,0 +1,8 @@
+# Namespace - Virtual isolation for our todo app
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: todo-app
+  labels:
+    app: todo
+    environment: base

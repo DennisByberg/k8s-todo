@@ -1,20 +1,40 @@
-# Use official Node.js runtime as base image
-FROM node:20-alpine
+# Multi-stage build for smaller production image
+FROM node:20-alpine AS builder
 
-# Set working directory
 WORKDIR /app
 
 # Copy package files
 COPY frontend/package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
-# Copy application code
+# Copy source code
 COPY frontend/ .
 
-# Expose port 3000
+# Build the application (creates .next folder)
+RUN npm run build
+
+# Production stage
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Copy package files
+COPY frontend/package*.json ./
+
+# Install ONLY production dependencies
+RUN npm ci --only=production
+
+# Copy built application from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+
+# Set NODE_ENV to production
+ENV NODE_ENV=production
+
+# Expose port
 EXPOSE 3000
 
-# Run Next.js development server
-CMD ["npm", "run", "dev"]
+# Start production server
+CMD ["npm", "start"]
