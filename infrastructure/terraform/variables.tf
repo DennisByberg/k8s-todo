@@ -13,7 +13,7 @@ variable "location" {
 variable "node_count" {
   description = "Number of AKS nodes"
   type        = number
-  default     = 1 # 1 node för demo (sparar 50%)
+  default     = 2
 }
 
 variable "node_size" {
