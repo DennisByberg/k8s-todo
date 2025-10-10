@@ -113,19 +113,35 @@ docker push acrk8stododev.azurecr.io/todo-frontend:latest
 ### Local
 
 ```bash
-# Optional: Stop deployment
+# Switch to local context
+kubectl config use-context docker-desktop
+
+# Uninstall Helm release
 helm uninstall todo-app -n todo-app
+
+# Delete namespace (removes all resources)
+kubectl delete namespace todo-app
+
+# Verify everything is gone
+kubectl get all -n todo-app
+```
+
+**Note:** If namespace is stuck in "Terminating":
+
+```bash
+kubectl delete namespace todo-app --force --grace-period=0
 ```
 
 ### Azure
 
 ```bash
-# Option 1: Keep running (costs apply)
+# Option 1: Keep running (~$65/month)
 # Just close terminals
 
-# Option 2: Destroy infrastructure
+# Option 2: Destroy infrastructure (recommended)
 cd infrastructure/terraform
 terraform destroy
+# Confirm with: yes
 ```
 
 ---
