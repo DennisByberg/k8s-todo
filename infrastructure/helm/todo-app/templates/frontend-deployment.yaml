@@ -6,6 +6,7 @@ metadata:
     app: {{ include "todo-app.name" . }}-frontend
 spec:
   replicas: {{ .Values.frontend.replicaCount }}
+  progressDeadlineSeconds: 600  # 10 minutes for deployment to complete
   selector:
     matchLabels:
       app: {{ include "todo-app.name" . }}-frontend
@@ -30,14 +31,18 @@ spec:
           httpGet:
             path: /
             port: 3000
-          initialDelaySeconds: 15
+          initialDelaySeconds: 30  # Wait 30s before first check
           periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
         readinessProbe:
           httpGet:
             path: /
             port: 3000
-          initialDelaySeconds: 10
+          initialDelaySeconds: 20  # Wait 20s before first check
           periodSeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 3
         resources:
           requests:
             memory: "128Mi"
