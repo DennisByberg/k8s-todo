@@ -108,6 +108,25 @@ jobs:
             --overwrite-existing
           kubectl get nodes
 
+      - name: Clean up existing deployments
+        if: steps.check-aks.outputs.exists == 'true'
+        run: |
+          # Check if release exists
+          if helm list -n ${{ env.NAMESPACE }} | grep -q todo-app; then
+            echo "Uninstalling existing Helm release..."
+            helm uninstall todo-app -n ${{ env.NAMESPACE }} || true
+            
+            # Wait for resources to be deleted
+            echo "Waiting for resources to be deleted..."
+            kubectl wait --for=delete deployment --all -n ${{ env.NAMESPACE }} --timeout=60s || true
+            kubectl wait --for=delete pod --all -n ${{ env.NAMESPACE }} --timeout=60s || true
+            
+            # Force delete PVC to allow size change
+            kubectl delete pvc --all -n ${{ env.NAMESPACE }} --force --grace-period=0 || true
+            
+            sleep 10
+          fi
+
       - name: Deploy with Helm
         if: steps.check-aks.outputs.exists == 'true'
         run: |
