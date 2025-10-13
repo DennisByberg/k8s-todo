@@ -85,7 +85,3 @@ Type `yes` to confirm. This takes ~5 minutes.
 - Takes 5-10 min to recreate tomorrow
 - All data is lost (database, persistent volumes)
 - Must rebuild and push images again
-
----
-
-_Tomorrow: [Daily Startup Guide](./daily-startup.md)_
