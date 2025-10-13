@@ -72,14 +72,19 @@ terraform apply
 ### 2. Connect to AKS
 
 ```bash
-az login
+# Check if logged in, otherwise login
+az account show || az login
 
+# Get AKS credentials and configure kubectl
 az aks get-credentials \
   --resource-group rg-k8s-todo-dev \
   --name aks-k8s-todo-dev \
   --overwrite-existing
 
+# Switch context
 kubectl config use-context aks-k8s-todo-dev
+
+# Verify connection
 kubectl get nodes
 ```
 
@@ -131,21 +136,6 @@ kubectl get pods -n todo-app -w
 ```
 
 Press `Ctrl+C` when all pods show `Running`.
-
-### 5. Access Application
-
-```bash
-# Terminal 1: Frontend
-kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
-
-# Terminal 2: Backend
-kubectl port-forward -n todo-app svc/todo-app-backend 8000:8000
-```
-
-**URLs:**
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000/docs
 
 ---
 
