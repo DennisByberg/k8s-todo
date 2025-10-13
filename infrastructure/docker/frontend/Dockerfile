@@ -12,7 +12,7 @@ RUN npm ci
 # Copy source code
 COPY frontend/ .
 
-# Build the application (creates .next folder)
+# Build the application (creates .next folder with standalone output)
 RUN npm run build
 
 # Production stage
@@ -20,21 +20,18 @@ FROM node:20-alpine AS runner
 
 WORKDIR /app
 
-# Copy package files
-COPY frontend/package*.json ./
-
-# Install ONLY production dependencies
-RUN npm ci --only=production
-
-# Copy built application from builder
-COPY --from=builder /app/.next ./.next
-COPY --from=builder /app/public ./public
-
 # Set NODE_ENV to production
 ENV NODE_ENV=production
+
+# Copy standalone server and dependencies
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/static ./.next/static
+
+# Copy public folder if it exists (optional)
+COPY --from=builder /app/public ./public
 
 # Expose port
 EXPOSE 3000
 
-# Start production server
-CMD ["npm", "start"]
+# Start production server using standalone output
+CMD ["node", "server.js"]
