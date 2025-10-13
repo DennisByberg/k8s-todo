@@ -38,3 +38,21 @@ postgres:
   persistence:
     enabled: true
     size: 1Gi
+
+# Ingress configuration
+ingress:
+  enabled: false
+  className: nginx
+  annotations:
+    {}
+    # cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  hosts:
+    - host: todo-app.example.com
+      paths:
+        - path: /
+          pathType: Prefix
+  tls:
+    []
+    # - secretName: todo-app-tls
+    #   hosts:
+    #     - todo-app.example.com
