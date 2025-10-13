@@ -1,0 +1,131 @@
+name: Build and Deploy to AKS
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  ACR_NAME: acrk8stododev
+  ACR_REGISTRY: acrk8stododev.azurecr.io
+  NAMESPACE: todo-app
+  HELM_CHART: infrastructure/helm/todo-app
+
+jobs:
+  build-and-push:
+    name: Build and Push Images
+    runs-on: ubuntu-latest
+
+    outputs:
+      image-tag: ${{ steps.generate-tag.outputs.tag }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Generate image tag
+        id: generate-tag
+        run: |
+          SHORT_SHA=$(echo ${{ github.sha }} | cut -c1-7)
+          TAG="${{ github.ref_name }}-${SHORT_SHA}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+          echo "Image tag: ${TAG}"
+
+      - name: Login to ACR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.ACR_REGISTRY }}
+          username: ${{ secrets.ACR_USERNAME }}
+          password: ${{ secrets.ACR_PASSWORD }}
+
+      - name: Build and push backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/backend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_REGISTRY }}/todo-backend:${{ steps.generate-tag.outputs.tag }}
+            ${{ env.ACR_REGISTRY }}/todo-backend:latest
+
+      - name: Build and push frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: infrastructure/docker/frontend/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ACR_REGISTRY }}/todo-frontend:${{ steps.generate-tag.outputs.tag }}
+            ${{ env.ACR_REGISTRY }}/todo-frontend:latest
+
+  deploy-to-aks:
+    name: Deploy to AKS
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Check if AKS exists
+        id: check-aks
+        run: |
+          if az aks show --resource-group rg-k8s-todo-dev --name aks-k8s-todo-dev &> /dev/null; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+            echo "⚠️ AKS cluster not found. Run 'Manage Azure Infrastructure' workflow first." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Setup kubectl
+        if: steps.check-aks.outputs.exists == 'true'
+        uses: azure/setup-kubectl@v3
+        with:
+          version: 'latest'
+
+      - name: Setup Helm
+        if: steps.check-aks.outputs.exists == 'true'
+        uses: azure/setup-helm@v3
+        with:
+          version: 'latest'
+
+      - name: Configure kubectl
+        if: steps.check-aks.outputs.exists == 'true'
+        run: |
+          az aks get-credentials \
+            --resource-group rg-k8s-todo-dev \
+            --name aks-k8s-todo-dev \
+            --overwrite-existing
+          kubectl get nodes
+
+      - name: Deploy with Helm
+        if: steps.check-aks.outputs.exists == 'true'
+        run: |
+          helm upgrade --install todo-app ${{ env.HELM_CHART }} \
+            --namespace ${{ env.NAMESPACE }} \
+            --create-namespace \
+            --set imageRegistry="${{ env.ACR_REGISTRY }}" \
+            --set backend.image.tag="${{ needs.build-and-push.outputs.image-tag }}" \
+            --set frontend.image.tag="${{ needs.build-and-push.outputs.image-tag }}" \
+            --set backend.replicaCount=2 \
+            --set frontend.replicaCount=2 \
+            --set backend.image.pullPolicy=Always \
+            --set frontend.image.pullPolicy=Always \
+            --wait \
+            --timeout 5m
+
+      - name: Verify deployment
+        if: steps.check-aks.outputs.exists == 'true'
+        run: |
+          kubectl get pods -n ${{ env.NAMESPACE }}
+          kubectl get services -n ${{ env.NAMESPACE }}

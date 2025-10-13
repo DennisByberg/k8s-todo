@@ -4,12 +4,12 @@ Quick reference documentation for daily development workflow.
 
 ## 📚 Documentation
 
-| Document                               | Purpose                                   |
-| -------------------------------------- | ----------------------------------------- |
-| [Project Status](./deployment-flow.md) | Current status and next steps             |
-| [Initial Setup](./initial-setup.md)    | First-time installation and configuration |
-| [Daily Startup](./daily-startup.md)    | Quick commands to start working           |
-| [Daily Cleanup](./daily-cleanup.md)    | End of day cleanup                        |
+| Document                              | Purpose                                   |
+| ------------------------------------- | ----------------------------------------- |
+| [Project Status](./project-status.md) | Current status and next steps             |
+| [Initial Setup](./initial-setup.md)   | First-time installation and configuration |
+| [Daily Startup](./daily-startup.md)   | Quick commands to start working           |
+| [Daily Cleanup](./daily-cleanup.md)   | End of day cleanup                        |
 
 ## 🎯 Quick Start
 

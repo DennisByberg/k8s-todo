@@ -1,0 +1,104 @@
+name: Manage Azure Infrastructure
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Action to perform'
+        required: true
+        type: choice
+        options:
+          - plan
+          - apply
+          - destroy
+      environment:
+        description: 'Environment'
+        required: true
+        type: choice
+        options:
+          - dev
+        default: dev
+
+env:
+  TF_VERSION: '1.6.0'
+  WORKING_DIR: infrastructure/terraform
+
+jobs:
+  terraform:
+    name: Terraform ${{ inputs.action }}
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ${{ env.WORKING_DIR }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: ${{ env.TF_VERSION }}
+
+      - name: Azure Login
+        uses: azure/login@v1
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Terraform Init
+        run: terraform init
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Validate
+        run: terraform validate
+
+      - name: Terraform Plan
+        if: inputs.action == 'plan' || inputs.action == 'apply'
+        run: |
+          terraform plan \
+            -var="environment=${{ inputs.environment }}" \
+            -out=tfplan
+
+      - name: Terraform Apply
+        if: inputs.action == 'apply'
+        run: terraform apply -auto-approve tfplan
+
+      - name: Terraform Destroy Plan
+        if: inputs.action == 'destroy'
+        run: |
+          terraform plan \
+            -destroy \
+            -var="environment=${{ inputs.environment }}" \
+            -out=tfplan-destroy
+
+      - name: Terraform Destroy
+        if: inputs.action == 'destroy'
+        run: terraform destroy -auto-approve
+
+      - name: Get AKS Credentials (after apply)
+        if: inputs.action == 'apply'
+        run: |
+          az aks get-credentials \
+            --resource-group rg-k8s-todo-${{ inputs.environment }} \
+            --name aks-k8s-todo-${{ inputs.environment }} \
+            --overwrite-existing
+
+          echo "AKS cluster is ready!"
+          kubectl get nodes
+
+      - name: Output Infrastructure Info
+        if: inputs.action == 'apply'
+        run: |
+          echo "## Infrastructure Created" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- Resource Group: rg-k8s-todo-${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "- ACR: acrk8stodo${{ inputs.environment }}.azurecr.io" >> $GITHUB_STEP_SUMMARY
+          echo "- AKS: aks-k8s-todo-${{ inputs.environment }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Next steps:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Run the 'Build and Deploy to AKS' workflow" >> $GITHUB_STEP_SUMMARY
+          echo "2. Or manually deploy with helm" >> $GITHUB_STEP_SUMMARY
