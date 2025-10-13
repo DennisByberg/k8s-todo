@@ -140,11 +140,33 @@ jobs:
             --set frontend.replicaCount=2 \
             --set backend.image.pullPolicy=Always \
             --set frontend.image.pullPolicy=Always \
-            --wait \
-            --timeout 5m
+            --timeout 10m
+
+      - name: Wait for deployments to be ready
+        if: steps.check-aks.outputs.exists == 'true'
+        run: |
+          echo "Waiting for postgres deployment..."
+          kubectl rollout status deployment/todo-app-postgres -n ${{ env.NAMESPACE }} --timeout=5m
+
+          echo "Waiting for backend deployment..."
+          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=5m
+
+          echo "Waiting for frontend deployment..."
+          kubectl rollout status deployment/todo-app-frontend -n ${{ env.NAMESPACE }} --timeout=5m
 
       - name: Verify deployment
         if: steps.check-aks.outputs.exists == 'true'
         run: |
           kubectl get pods -n ${{ env.NAMESPACE }}
           kubectl get services -n ${{ env.NAMESPACE }}
+
+      - name: Show pod status on failure
+        if: failure() && steps.check-aks.outputs.exists == 'true'
+        run: |
+          echo "## Deployment Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Status:" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pod Events:" >> $GITHUB_STEP_SUMMARY
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' >> $GITHUB_STEP_SUMMARY
