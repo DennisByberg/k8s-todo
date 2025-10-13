@@ -148,8 +148,12 @@ jobs:
           echo "Waiting for postgres deployment..."
           kubectl rollout status deployment/todo-app-postgres -n ${{ env.NAMESPACE }} --timeout=5m
 
+          # Give postgres extra time to be fully ready
+          echo "Waiting extra 30s for postgres to stabilize..."
+          sleep 30
+
           echo "Waiting for backend deployment..."
-          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=5m
+          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=10m
 
           echo "Waiting for frontend deployment..."
           kubectl rollout status deployment/todo-app-frontend -n ${{ env.NAMESPACE }} --timeout=5m
@@ -157,16 +161,35 @@ jobs:
       - name: Verify deployment
         if: steps.check-aks.outputs.exists == 'true'
         run: |
+          echo "## Deployment Status" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pods:" >> $GITHUB_STEP_SUMMARY
+          kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Services:" >> $GITHUB_STEP_SUMMARY
+          kubectl get services -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+
+          # Also show in console
           kubectl get pods -n ${{ env.NAMESPACE }}
           kubectl get services -n ${{ env.NAMESPACE }}
 
-      - name: Show pod status on failure
+      - name: Show pod logs on failure
         if: failure() && steps.check-aks.outputs.exists == 'true'
         run: |
           echo "## Deployment Failed" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
+
           echo "### Pod Status:" >> $GITHUB_STEP_SUMMARY
           kubectl get pods -n ${{ env.NAMESPACE }} >> $GITHUB_STEP_SUMMARY
+
           echo "" >> $GITHUB_STEP_SUMMARY
-          echo "### Pod Events:" >> $GITHUB_STEP_SUMMARY
-          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' >> $GITHUB_STEP_SUMMARY
+          echo "### Backend Logs:" >> $GITHUB_STEP_SUMMARY
+          kubectl logs -n ${{ env.NAMESPACE }} -l app=todo-app-backend --tail=50 >> $GITHUB_STEP_SUMMARY || echo "No backend logs available" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Postgres Logs:" >> $GITHUB_STEP_SUMMARY
+          kubectl logs -n ${{ env.NAMESPACE }} -l app=todo-app-postgres --tail=50 >> $GITHUB_STEP_SUMMARY || echo "No postgres logs available" >> $GITHUB_STEP_SUMMARY
+
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Recent Events:" >> $GITHUB_STEP_SUMMARY
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -20 >> $GITHUB_STEP_SUMMARY
