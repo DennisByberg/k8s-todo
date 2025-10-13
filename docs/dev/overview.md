@@ -4,21 +4,18 @@ Quick reference documentation for daily development workflow.
 
 ## 📚 Documentation
 
-| Document                                | Purpose                                   |
-| --------------------------------------- | ----------------------------------------- |
-| [Project Status](./deployment-flow.md)  | Current status and next steps             |
-| [Daily Startup](./daily-startup.md)     | Quick commands to start working           |
-| [Initial Setup](./initial-setup.md)     | First-time installation and configuration |
-| [Deploy to AKS](./deploy-aks.md)        | Azure Kubernetes Service deployment       |
-| [Troubleshooting](./troubleshooting.md) | Common issues and solutions               |
+| Document                               | Purpose                                   |
+| -------------------------------------- | ----------------------------------------- |
+| [Project Status](./deployment-flow.md) | Current status and next steps             |
+| [Initial Setup](./initial-setup.md)    | First-time installation and configuration |
+| [Daily Startup](./daily-startup.md)    | Quick commands to start working           |
+| [Daily Cleanup](./daily-cleanup.md)    | End of day cleanup                        |
 
 ## 🎯 Quick Start
 
 **Already set up?** → [Daily Startup Guide](./daily-startup.md)
 
 **First time?** → [Initial Setup Guide](./initial-setup.md)
-
-**Problems?** → [Troubleshooting Guide](./troubleshooting.md)
 
 ## 🏗️ Architecture
 
@@ -43,5 +40,3 @@ Application (Helm)
 4. Deploy to AKS with Helm
 
 ---
-
-_Last updated: 2025-10-10_

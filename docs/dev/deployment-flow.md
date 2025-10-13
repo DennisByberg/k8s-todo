@@ -49,7 +49,7 @@ Complete checklist for K8s Todo application deployment.
 ## Application Running
 
 - ✅ Application deployed to AKS
-- ✅ All pods running (1 replica each due to CPU constraints)
+- ✅ All pods running (2 replicas each)
 - ✅ Database initialized
 - ✅ Backend API accessible
 - ✅ Frontend accessible
@@ -108,8 +108,7 @@ Complete checklist for K8s Todo application deployment.
 
 - ✅ Initial setup guide
 - ✅ Daily startup guide
-- ✅ Troubleshooting guide
-- ✅ Deploy to AKS guide
+- ✅ Daily cleanup guide
 - ⬜ CI/CD pipeline documentation
 - ⬜ Architecture diagrams
 - ⬜ API documentation published
@@ -133,4 +132,8 @@ Complete checklist for K8s Todo application deployment.
 
 ---
 
-_Last updated: 2025-10-10_
+## Quick Links
+
+- [Initial Setup Guide](./initial-setup.md) - First-time installation
+- [Daily Startup Guide](./daily-startup.md) - Start work each day
+- [Daily Cleanup Guide](./daily-cleanup.md) - End of day cleanup

@@ -1,5 +1,11 @@
 # Initial Setup Guide
 
+**🎯 Purpose:** First-time setup only. Run once to install tools and create infrastructure.
+
+**After this:** Use [Daily Startup Guide](./daily-startup.md) for everyday work.
+
+---
+
 First-time installation and configuration.
 
 ## 📋 Prerequisites
@@ -138,8 +144,8 @@ helm install todo-app infrastructure/helm/todo-app \
   --namespace todo-app \
   --create-namespace \
   --set imageRegistry="acrk8stododev.azurecr.io" \
-  --set backend.replicaCount=1 \
-  --set frontend.replicaCount=1 \
+  --set backend.replicaCount=2 \
+  --set frontend.replicaCount=2 \
   --set backend.image.pullPolicy=Always \
   --set frontend.image.pullPolicy=Always
 
@@ -158,6 +164,4 @@ Open http://localhost:3000
 
 You're ready for daily development! See [Daily Startup Guide](./daily-startup.md).
 
----
-
-_For issues, see [Troubleshooting Guide](./troubleshooting.md)._
+**End of day?** Use [Daily Cleanup Guide](./daily-cleanup.md) to free resources.

@@ -1,5 +1,13 @@
 # Daily Startup Guide
 
+**🎯 Purpose:** Daily workflow after initial setup is complete.
+
+**First time?** See [Initial Setup Guide](./initial-setup.md) to install tools and create infrastructure.
+
+**End of day?** See [Daily Cleanup Guide](./daily-cleanup.md) to free resources.
+
+---
+
 Quick commands to get started each day.
 
 ## 🚀 Local Development
@@ -75,7 +83,34 @@ kubectl config use-context aks-k8s-todo-dev
 kubectl get nodes
 ```
 
-### 3. Deploy Application
+### 3. Build and Push Images
+
+**Important:** Always build and push fresh images before deploying to AKS.
+
+```bash
+# Make sure you're in project root
+cd ~/dev/k8s-todo
+
+# Login to ACR
+az acr login --name acrk8stododev
+
+# Build images
+docker build -t todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
+docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
+
+# Tag for ACR
+docker tag todo-backend:latest acrk8stododev.azurecr.io/todo-backend:latest
+docker tag todo-frontend:latest acrk8stododev.azurecr.io/todo-frontend:latest
+
+# Push to ACR
+docker push acrk8stododev.azurecr.io/todo-backend:latest
+docker push acrk8stododev.azurecr.io/todo-frontend:latest
+
+# Verify images in ACR
+az acr repository list --name acrk8stododev --output table
+```
+
+### 4. Deploy Application
 
 ```bash
 # Check if deployed
@@ -86,62 +121,55 @@ helm upgrade --install todo-app infrastructure/helm/todo-app \
   --namespace todo-app \
   --create-namespace \
   --set imageRegistry="acrk8stododev.azurecr.io" \
-  --set backend.replicaCount=1 \
-  --set frontend.replicaCount=1 \
+  --set backend.replicaCount=2 \
+  --set frontend.replicaCount=2 \
   --set backend.image.pullPolicy=Always \
   --set frontend.image.pullPolicy=Always
 
-kubectl get pods -n todo-app
+# Monitor deployment
+kubectl get pods -n todo-app -w
 ```
 
-### 4. Push New Images (if needed)
+Press `Ctrl+C` when all pods show `Running`.
+
+### 5. Access Application
 
 ```bash
-az acr login --name acrk8stododev
+# Terminal 1: Frontend
+kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
 
-docker tag todo-backend:latest acrk8stododev.azurecr.io/todo-backend:latest
-docker push acrk8stododev.azurecr.io/todo-backend:latest
-
-docker tag todo-frontend:latest acrk8stododev.azurecr.io/todo-frontend:latest
-docker push acrk8stododev.azurecr.io/todo-frontend:latest
+# Terminal 2: Backend
+kubectl port-forward -n todo-app svc/todo-app-backend 8000:8000
 ```
+
+**URLs:**
+
+- Frontend: http://localhost:3000
+- Backend API: http://localhost:8000/docs
 
 ---
 
-## 🛑 End of Day
+## 🔄 Update Code (Quick Deploy)
 
-### Local
-
-```bash
-# Switch to local context
-kubectl config use-context docker-desktop
-
-# Uninstall Helm release
-helm uninstall todo-app -n todo-app
-
-# Delete namespace (removes all resources)
-kubectl delete namespace todo-app
-
-# Verify everything is gone
-kubectl get all -n todo-app
-```
-
-**Note:** If namespace is stuck in "Terminating":
+When you've made code changes and want to deploy to AKS:
 
 ```bash
-kubectl delete namespace todo-app --force --grace-period=0
-```
+# 1. Build and push
+cd ~/dev/k8s-todo
+az acr login --name acrk8stododev
 
-### Azure
+docker build -t todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
+docker push acrk8stododev.azurecr.io/todo-backend:latest
 
-```bash
-# Option 1: Keep running (~$65/month)
-# Just close terminals
+docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
+docker push acrk8stododev.azurecr.io/todo-frontend:latest
 
-# Option 2: Destroy infrastructure (recommended)
-cd infrastructure/terraform
-terraform destroy
-# Confirm with: yes
+# 2. Restart deployments
+kubectl rollout restart deployment/todo-app-backend -n todo-app
+kubectl rollout restart deployment/todo-app-frontend -n todo-app
+
+# 3. Monitor
+kubectl get pods -n todo-app -w
 ```
 
 ---
@@ -163,8 +191,12 @@ kubectl logs -n todo-app deployment/todo-app-frontend
 
 # Restart deployment
 kubectl rollout restart deployment/todo-app-backend -n todo-app
+
+# Check if images exist in ACR
+az acr repository list --name acrk8stododev --output table
+az acr repository show-tags --name acrk8stododev --repository todo-backend --output table
 ```
 
 ---
 
-_See [Troubleshooting Guide](./troubleshooting.md) for common issues._
+_End of day: [Daily Cleanup Guide](./daily-cleanup.md)_
