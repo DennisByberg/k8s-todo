@@ -6,7 +6,7 @@ imageRegistry: '' # Empty for local, acrk8stododev.azurecr.io for Azure
 
 # Backend configuration
 backend:
-  replicaCount: 3
+  replicaCount: 1
   image:
     repository: todo-backend
     tag: latest
@@ -24,7 +24,7 @@ backend:
 
 # Frontend configuration
 frontend:
-  replicaCount: 2
+  replicaCount: 1
   image:
     repository: todo-frontend
     tag: latest
