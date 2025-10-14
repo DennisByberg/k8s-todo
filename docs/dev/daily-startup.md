@@ -109,7 +109,32 @@ kubectl config use-context aks-k8s-todo-dev
 kubectl get nodes
 ```
 
-### 3. Install ArgoCD (If First Time After Terraform Apply)
+### 3. Push Images to ACR (If Missing)
+
+```bash
+# Check if images exist in ACR
+az acr repository list --name acrk8stododev --output table
+
+# If empty or missing todo-backend/todo-frontend, build and push:
+cd ~/dev/k8s-todo
+
+# Login to ACR
+az acr login --name acrk8stododev
+
+# Build and push backend
+docker build -t acrk8stododev.azurecr.io/todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
+docker push acrk8stododev.azurecr.io/todo-backend:latest
+
+# Build and push frontend
+docker build -t acrk8stododev.azurecr.io/todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
+docker push acrk8stododev.azurecr.io/todo-frontend:latest
+
+# Verify
+az acr repository list --name acrk8stododev --output table
+az acr repository show-tags --name acrk8stododev --repository todo-backend --output table
+```
+
+### 4. Install ArgoCD (If First Time After Terraform Apply)
 
 ```bash
 # Create namespace
@@ -125,7 +150,7 @@ kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -
 kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 ```
 
-### 4. Access ArgoCD UI (Optional)
+### 5. Access ArgoCD UI (Optional)
 
 ```bash
 # Get admin password
@@ -139,7 +164,7 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 # Password: (from above)
 ```
 
-### 5. Check Application Status
+### 6. Check Application Status
 
 ```bash
 # Check ArgoCD application
