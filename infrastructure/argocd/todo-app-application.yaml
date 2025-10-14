@@ -15,17 +15,15 @@ spec:
   # Where the Helm chart lives in Git
   source:
     repoURL: https://github.com/DennisByberg/k8s-todo
-    targetRevision: dev # TODO: Change this to main.
+    targetRevision: dev
     path: infrastructure/helm/todo-app
     helm:
       values: |
         imageRegistry: "acrk8stododev.azurecr.io"
         backend:
-          replicaCount: 2
           image:
             pullPolicy: Always
         frontend:
-          replicaCount: 2
           image:
             pullPolicy: Always
 
