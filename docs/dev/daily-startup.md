@@ -23,22 +23,43 @@ kubectl config use-context docker-desktop
 kubectl get nodes
 ```
 
-### 3. Check Deployment
+### 3. Build Local Images
+
+**Important:** Build images before deploying locally.
+
+```bash
+# Make sure you're in project root
+cd ~/dev/k8s-todo
+
+# Build images
+docker build -t todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
+docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
+
+# Verify images exist
+docker images | grep todo
+```
+
+### 4. Deploy Application
 
 ```bash
 # Check if app is already running
 kubectl get pods -n todo-app
 
-# If empty, deploy:
-helm install todo-app infrastructure/helm/todo-app \
+# If empty or if you rebuilt images, deploy:
+helm upgrade --install todo-app infrastructure/helm/todo-app \
   --namespace todo-app \
   --create-namespace \
   --set imageRegistry="" \
   --set backend.image.pullPolicy=IfNotPresent \
   --set frontend.image.pullPolicy=IfNotPresent
+
+# Monitor deployment
+kubectl get pods -n todo-app -w
 ```
 
-### 4. Access Application
+Press `Ctrl+C` when all pods show `Running`.
+
+### 5. Access Application
 
 ```bash
 # Terminal 1: Frontend
