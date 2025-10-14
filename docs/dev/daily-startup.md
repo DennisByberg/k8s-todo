@@ -160,12 +160,33 @@ Press `Ctrl+C` when all pods show `Running`.
 
 ---
 
-## 🔄 Update Code (Quick Deploy)
+## 🔄 Update Code (Automated CI/CD)
 
-When you've made code changes and want to deploy to AKS:
+**Nu är detta automatiserat!** GitHub Actions gör allt när du pushar kod:
 
 ```bash
-# 1. Build and push
+# 1. Make your code changes
+# 2. Commit and push
+git add .
+git commit -m "Your change description"
+git push origin main
+
+# 3. GitHub Actions automatically:
+#    - Builds Docker images
+#    - Pushes to ACR (tagged with Git SHA + latest)
+#    - Restarts deployments in AKS
+#    - Verifies deployment
+
+# 4. Monitor GitHub Actions
+# Go to: https://github.com/YOUR_USERNAME/k8s-todo/actions
+
+# 5. Monitor deployment in AKS (optional)
+kubectl get pods -n todo-app -w
+```
+
+**Manuellt deployment (om GitHub Actions inte används):**
+
+```bash
 cd ~/dev/k8s-todo
 az acr login --name acrk8stododev
 
@@ -175,11 +196,8 @@ docker push acrk8stododev.azurecr.io/todo-backend:latest
 docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
 docker push acrk8stododev.azurecr.io/todo-frontend:latest
 
-# 2. Restart deployments
 kubectl rollout restart deployment/todo-app-backend -n todo-app
 kubectl rollout restart deployment/todo-app-frontend -n todo-app
-
-# 3. Monitor
 kubectl get pods -n todo-app -w
 ```
 
@@ -203,9 +221,12 @@ kubectl logs -n todo-app deployment/todo-app-frontend
 # Restart deployment
 kubectl rollout restart deployment/todo-app-backend -n todo-app
 
-# Check if images exist in ACR
+# Check images in ACR
 az acr repository list --name acrk8stododev --output table
 az acr repository show-tags --name acrk8stododev --repository todo-backend --output table
+
+# View GitHub Actions workflow runs
+# https://github.com/YOUR_USERNAME/k8s-todo/actions
 ```
 
 ---

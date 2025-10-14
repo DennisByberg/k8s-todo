@@ -58,12 +58,12 @@ Complete checklist for K8s Todo application deployment.
 
 ## CI/CD Pipeline
 
-- ⬜ GitHub Actions workflow created
-- ⬜ Build job (Docker images)
-- ⬜ Push to ACR job
-- ⬜ Deploy to AKS job
-- ⬜ Automatic deployment on push to main
-- ⬜ Version tagging strategy
+- ✅ GitHub Actions workflow created
+- ✅ Build job (Docker images)
+- ✅ Push to ACR job
+- ✅ Deploy to AKS job
+- ✅ Automatic deployment on push to main/dev
+- ✅ Version tagging strategy (Git SHA + latest)
 
 ## GitOps (ArgoCD)
 
@@ -109,7 +109,7 @@ Complete checklist for K8s Todo application deployment.
 - ✅ Initial setup guide
 - ✅ Daily startup guide
 - ✅ Daily cleanup guide
-- ⬜ CI/CD pipeline documentation
+- ✅ CI/CD pipeline documentation
 - ⬜ Architecture diagrams
 - ⬜ API documentation published
 
@@ -128,6 +128,7 @@ Complete checklist for K8s Todo application deployment.
 **Environment:** AKS (Azure Kubernetes Service)  
 **Nodes:** 2x Standard_B2s (2 vCPU, 8GB RAM each)  
 **Replicas:** 2x Backend, 2x Frontend, 1x Postgres  
+**CI/CD:** GitHub Actions (automated on push to main/dev)  
 **Cost:** ~$65/month (destroy with `terraform destroy` when not in use)
 
 ---
@@ -137,3 +138,4 @@ Complete checklist for K8s Todo application deployment.
 - [Initial Setup Guide](./initial-setup.md) - First-time installation
 - [Daily Startup Guide](./daily-startup.md) - Start work each day
 - [Daily Cleanup Guide](./daily-cleanup.md) - End of day cleanup
+- [CI/CD Setup Guide](./ci-cd-setup.md) - GitHub Actions pipeline
