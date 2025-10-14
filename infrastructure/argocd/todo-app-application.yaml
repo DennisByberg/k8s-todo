@@ -15,7 +15,7 @@ spec:
   # Where the Helm chart lives in Git
   source:
     repoURL: https://github.com/DennisByberg/k8s-todo
-    targetRevision: dev
+    targetRevision: main
     path: infrastructure/helm/todo-app
     helm:
       values: |
