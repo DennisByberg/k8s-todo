@@ -109,78 +109,87 @@ kubectl config use-context aks-k8s-todo-dev
 kubectl get nodes
 ```
 
-### 3. Build and Push Images
-
-**Important:** Always build and push fresh images before deploying to AKS.
+### 3. Install ArgoCD (If First Time After Terraform Apply)
 
 ```bash
-# Make sure you're in project root
-cd ~/dev/k8s-todo
+# Create namespace
+kubectl create namespace argocd
 
-# Login to ACR
-az acr login --name acrk8stododev
+# Install ArgoCD
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 
-# Build images
-docker build -t todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
-docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
+# Wait for pods
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
 
-# Tag for ACR
-docker tag todo-backend:latest acrk8stododev.azurecr.io/todo-backend:latest
-docker tag todo-frontend:latest acrk8stododev.azurecr.io/todo-frontend:latest
-
-# Push to ACR
-docker push acrk8stododev.azurecr.io/todo-backend:latest
-docker push acrk8stododev.azurecr.io/todo-frontend:latest
-
-# Verify images in ACR
-az acr repository list --name acrk8stododev --output table
+# Create Application
+kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 ```
 
-### 4. Deploy Application
+### 4. Access ArgoCD UI (Optional)
 
 ```bash
-# Check if deployed
-helm list -n todo-app
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 
-# Deploy or upgrade
-helm upgrade --install todo-app infrastructure/helm/todo-app \
-  --namespace todo-app \
-  --create-namespace \
-  --set imageRegistry="acrk8stododev.azurecr.io" \
-  --set backend.replicaCount=2 \
-  --set frontend.replicaCount=2 \
-  --set backend.image.pullPolicy=Always \
-  --set frontend.image.pullPolicy=Always
+# Port-forward
+kubectl port-forward svc/argocd-server -n argocd 8080:443
 
-# Monitor deployment
-kubectl get pods -n todo-app -w
+# Open https://localhost:8080
+# Username: admin
+# Password: (from above)
 ```
 
-Press `Ctrl+C` when all pods show `Running`.
+### 5. Check Application Status
+
+```bash
+# Check ArgoCD application
+kubectl get application -n argocd
+
+# Check pods
+kubectl get pods -n todo-app
+
+# View logs
+kubectl logs -n todo-app deployment/todo-app-backend --tail=50
+```
 
 ---
 
-## 🔄 Update Code (Quick Deploy)
+## 🔄 Update Code (GitOps with ArgoCD)
 
-When you've made code changes and want to deploy to AKS:
+**Workflow:** Push to main → GitHub Actions builds images → ArgoCD syncs from Git
 
 ```bash
-# 1. Build and push
-cd ~/dev/k8s-todo
-az acr login --name acrk8stododev
+# 1. Make your code changes
 
-docker build -t todo-backend:latest -f infrastructure/docker/backend/Dockerfile .
-docker push acrk8stododev.azurecr.io/todo-backend:latest
+# 2. Update Helm values if needed
+# Edit infrastructure/helm/todo-app/values.yaml
 
-docker build -t todo-frontend:latest -f infrastructure/docker/frontend/Dockerfile .
-docker push acrk8stododev.azurecr.io/todo-frontend:latest
+# 3. Commit and push to main
+git add .
+git commit -m "Your change description"
+git push origin main
 
-# 2. Restart deployments
-kubectl rollout restart deployment/todo-app-backend -n todo-app
-kubectl rollout restart deployment/todo-app-frontend -n todo-app
+# 4. GitHub Actions automatically:
+#    - Builds Docker images
+#    - Pushes to ACR (tagged with Git SHA + latest)
 
-# 3. Monitor
+# 5. ArgoCD automatically (within 3 min):
+#    - Detects Git changes
+#    - Syncs Kubernetes resources
+#    - Restarts pods with new images
+
+# 6. Monitor in ArgoCD UI or:
 kubectl get pods -n todo-app -w
+```
+
+**Manual sync (if you don't want to wait 3 min):**
+
+```bash
+# Option 1: ArgoCD UI
+# Click SYNC button in https://localhost:8080
+
+# Option 2: kubectl
+kubectl patch application todo-app -n argocd --type merge -p '{"metadata":{"annotations":{"argocd.argoproj.io/refresh":"hard"}}}'
 ```
 
 ---
@@ -194,18 +203,18 @@ kubectl config use-context aks-k8s-todo-dev
 
 # Check status
 kubectl get pods -n todo-app
-kubectl get services -n todo-app
+kubectl get application -n argocd
 
 # View logs
-kubectl logs -n todo-app deployment/todo-app-backend
-kubectl logs -n todo-app deployment/todo-app-frontend
+kubectl logs -n todo-app deployment/todo-app-backend --tail=50
+kubectl logs -n argocd deployment/argocd-server --tail=50
 
-# Restart deployment
-kubectl rollout restart deployment/todo-app-backend -n todo-app
-
-# Check if images exist in ACR
+# Check images in ACR
 az acr repository list --name acrk8stododev --output table
 az acr repository show-tags --name acrk8stododev --repository todo-backend --output table
+
+# ArgoCD UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
 ```
 
 ---

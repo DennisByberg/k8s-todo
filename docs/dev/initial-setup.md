@@ -122,7 +122,43 @@ kubectl config use-context aks-k8s-todo-dev
 kubectl get nodes
 ```
 
-### 4. Push Images to ACR
+### 4. Setup CI/CD
+
+See [CI/CD Setup Guide](./ci-cd-setup.md) to configure GitHub Actions.
+
+### 5. Install ArgoCD
+
+```bash
+# Create namespace
+kubectl create namespace argocd
+
+# Install ArgoCD
+kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
+
+# Wait for pods
+kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
+
+# Get admin password
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
+
+# Access UI
+kubectl port-forward svc/argocd-server -n argocd 8080:443
+# Open https://localhost:8080
+# Username: admin
+# Password: (from above command)
+```
+
+### 6. Create ArgoCD Application
+
+```bash
+# Apply Application manifest
+kubectl apply -f infrastructure/argocd/todo-app-application.yaml
+
+# Verify
+kubectl get application -n argocd
+```
+
+### 7. Push Images to ACR
 
 ```bash
 az acr login --name acrk8stododev
@@ -137,24 +173,15 @@ docker push acrk8stododev.azurecr.io/todo-frontend:latest
 az acr repository list --name acrk8stododev --output table
 ```
 
-### 5. Deploy to AKS
+ArgoCD will automatically sync and deploy the application from Git.
+
+### 8. Test AKS Deployment
 
 ```bash
-helm install todo-app infrastructure/helm/todo-app \
-  --namespace todo-app \
-  --create-namespace \
-  --set imageRegistry="acrk8stododev.azurecr.io" \
-  --set backend.replicaCount=2 \
-  --set frontend.replicaCount=2 \
-  --set backend.image.pullPolicy=Always \
-  --set frontend.image.pullPolicy=Always
-
+# Wait for pods
 kubectl get pods -n todo-app -w
-```
 
-### 6. Test AKS Deployment
-
-```bash
+# Port-forward
 kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
 ```
 

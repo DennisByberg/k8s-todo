@@ -58,20 +58,20 @@ Complete checklist for K8s Todo application deployment.
 
 ## CI/CD Pipeline
 
-- ⬜ GitHub Actions workflow created
-- ⬜ Build job (Docker images)
-- ⬜ Push to ACR job
-- ⬜ Deploy to AKS job
-- ⬜ Automatic deployment on push to main
-- ⬜ Version tagging strategy
+- ✅ GitHub Actions workflow created
+- ✅ Build job (Docker images)
+- ✅ Push to ACR job
+- ✅ Automatic deployment on push to main
+- ✅ Version tagging strategy (Git SHA + latest)
 
 ## GitOps (ArgoCD)
 
-- ⬜ ArgoCD installed in AKS
-- ⬜ ArgoCD Application manifests created
-- ⬜ Git repository as source of truth
-- ⬜ Auto-sync enabled
-- ⬜ Rollback capabilities tested
+- ✅ ArgoCD installed in AKS
+- ✅ ArgoCD Application manifest created
+- ✅ Git repository as source of truth (main branch)
+- ✅ Auto-sync enabled (3 min polling)
+- ✅ Self-heal enabled (reverts manual changes)
+- ✅ Prune enabled (removes resources not in Git)
 
 ## Networking & Ingress
 
@@ -98,28 +98,41 @@ Complete checklist for K8s Todo application deployment.
 
 ## Monitoring & Logging
 
-- ?
+- ⬜ Prometheus installed
+- ⬜ Grafana dashboards configured
+- ⬜ Azure Monitor integration
+- ⬜ Centralized logging (ELK/Loki)
 
 ## Scalability
 
-- ?
+- ⬜ Horizontal Pod Autoscaler (HPA) configured
+- ⬜ Cluster Autoscaler enabled
+- ⬜ Load testing performed
 
 ## Documentation
 
 - ✅ Initial setup guide
 - ✅ Daily startup guide
 - ✅ Daily cleanup guide
-- ⬜ CI/CD pipeline documentation
+- ✅ CI/CD pipeline documentation
+- ✅ ArgoCD setup documented
 - ⬜ Architecture diagrams
 - ⬜ API documentation published
 
 ## Testing
 
-- ?
+- ⬜ Unit tests (backend)
+- ⬜ Integration tests
+- ⬜ E2E tests (frontend)
+- ⬜ CI pipeline runs tests
 
 ## Production Readiness
 
-- ?
+- ⬜ Multi-environment setup (dev/staging/prod)
+- ⬜ Backup and disaster recovery plan
+- ⬜ Monitoring and alerting
+- ⬜ Documentation complete
+- ⬜ Security audit performed
 
 ---
 
@@ -127,8 +140,16 @@ Complete checklist for K8s Todo application deployment.
 
 **Environment:** AKS (Azure Kubernetes Service)  
 **Nodes:** 2x Standard_B2s (2 vCPU, 8GB RAM each)  
-**Replicas:** 2x Backend, 2x Frontend, 1x Postgres  
+**Replicas:** 1x Backend, 1x Frontend, 1x Postgres  
+**CI/CD:** GitHub Actions (build images on push to main)  
+**GitOps:** ArgoCD (auto-sync from main branch)  
 **Cost:** ~$65/month (destroy with `terraform destroy` when not in use)
+
+---
+
+## Next Priority
+
+**Networking & Ingress** - Public URL with NGINX Ingress Controller and SSL/TLS
 
 ---
 
@@ -137,3 +158,6 @@ Complete checklist for K8s Todo application deployment.
 - [Initial Setup Guide](./initial-setup.md) - First-time installation
 - [Daily Startup Guide](./daily-startup.md) - Start work each day
 - [Daily Cleanup Guide](./daily-cleanup.md) - End of day cleanup
+- [CI/CD Setup Guide](./ci-cd-setup.md) - GitHub Actions pipeline
+
+_Last updated: 2025-01-14_
