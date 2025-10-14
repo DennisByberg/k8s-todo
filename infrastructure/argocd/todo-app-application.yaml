@@ -1,0 +1,38 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: todo-app
+  namespace: argocd
+spec:
+  # ArgoCD project (default is always available)
+  project: default
+
+  # Where the app should be deployed
+  destination:
+    namespace: todo-app
+    server: https://kubernetes.default.svc
+
+  # Where the Helm chart lives in Git
+  source:
+    repoURL: https://github.com/DennisByberg/k8s-todo
+    targetRevision: dev # TODO: Change this to main.
+    path: infrastructure/helm/todo-app
+    helm:
+      values: |
+        imageRegistry: "acrk8stododev.azurecr.io"
+        backend:
+          replicaCount: 2
+          image:
+            pullPolicy: Always
+        frontend:
+          replicaCount: 2
+          image:
+            pullPolicy: Always
+
+  # Sync policy
+  syncPolicy:
+    automated:
+      prune: true # Delete resources not in Git
+      selfHeal: true # Revert manual changes
+    syncOptions:
+      - CreateNamespace=true
