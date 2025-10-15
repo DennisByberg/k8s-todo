@@ -29,9 +29,20 @@ spec:
                 port:
                   number: 8000
           
+          # General health check endpoint
+          # Used by developers and monitoring tools
+          # Routes to backend /health endpoint
+          - path: /health
+            pathType: Exact
+            backend:
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: 8000
+          
           # Backend API routes
           # All paths starting with /api go to FastAPI backend
-          # Examples: /api/todos, /api/docs, /api/health
+          # Examples: /api/todos, /api/docs, /api/redoc
           - path: /api
             pathType: Prefix
             backend:
