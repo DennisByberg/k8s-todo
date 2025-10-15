@@ -16,6 +16,19 @@ spec:
       labels:
         app: backend
     spec:
+      # Wait for postgres to be ready before starting backend
+      initContainers:
+        - name: wait-for-postgres
+          image: busybox:1.36
+          command:
+            - sh
+            - -c
+            - |
+              until nc -z {{ .Release.Name }}-postgres 5432; do
+                echo "Waiting for postgres..."
+                sleep 2
+              done
+              echo "Postgres is ready!"
       containers:
         - name: backend
           {{- if .Values.imageRegistry }}

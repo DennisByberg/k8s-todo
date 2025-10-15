@@ -153,16 +153,16 @@ kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 ### 5. Access ArgoCD UI (Optional)
 
 ```bash
-# Get admin password
+# Terminal #1 - Get initial password
 kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath='{.data.password}' | base64 -d
 
-# Port-forward
+# Terminal #2 - Port-forward
 kubectl port-forward svc/argocd-server -n argocd 8080:443
-
-# Open https://localhost:8080
-# Username: admin
-# Password: (from above)
 ```
+
+**Open**: https://localhost:8080  
+**Username**: admin  
+**Password**: (from above)
 
 ### 6. Check Application Status
 
