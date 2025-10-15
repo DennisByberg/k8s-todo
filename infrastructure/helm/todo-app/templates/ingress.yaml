@@ -17,7 +17,16 @@ spec:
   rules:
     - http:
         paths:
-          # Backend API routes - /api/* goes to backend (no rewrite, keep /api prefix)
+          # Health check for Load Balancer - goes to backend
+          - path: /healthz
+            pathType: Exact
+            backend:
+              service:
+                name: {{ .Release.Name }}-backend
+                port:
+                  number: 8000
+          
+          # Backend API routes - /api/* goes to backend
           - path: /api
             pathType: Prefix
             backend:
