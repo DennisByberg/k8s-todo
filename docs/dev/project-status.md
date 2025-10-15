@@ -75,9 +75,10 @@ Complete checklist for K8s Todo application deployment.
 
 ## Networking & Ingress
 
-- ⬜ NGINX Ingress Controller installed
+- ✅ NGINX Ingress Controller installed
+- ✅ Azure Load Balancer created (Public IP assigned)
 - ⬜ Ingress rules configured
-- ⬜ DNS configuration
+- ⬜ DNS configuration (optional)
 - ⬜ SSL/TLS certificates (Let's Encrypt)
 - ⬜ Public URL accessible
 
@@ -116,6 +117,7 @@ Complete checklist for K8s Todo application deployment.
 - ✅ Daily cleanup guide
 - ✅ CI/CD pipeline documentation
 - ✅ ArgoCD setup documented
+- ✅ Ingress setup documented
 - ⬜ Architecture diagrams
 - ⬜ API documentation published
 
@@ -140,24 +142,25 @@ Complete checklist for K8s Todo application deployment.
 
 **Environment:** AKS (Azure Kubernetes Service)  
 **Nodes:** 2x Standard_B2s (2 vCPU, 8GB RAM each)  
-**Replicas:** 1x Backend, 1x Frontend, 1x Postgres  
+**Replicas:** 2x Backend, 2x Frontend, 1x Postgres  
 **CI/CD:** GitHub Actions (build images on push to main)  
 **GitOps:** ArgoCD (auto-sync from main branch)  
-**Cost:** ~$65/month (destroy with `terraform destroy` when not in use)
+**Ingress:** NGINX Ingress Controller (Public IP: 4.165.9.111)  
+**Cost:** ~$87/month (~$22 for Load Balancer + IP, destroy with `terraform destroy` when not in use)
 
 ---
 
 ## Next Priority
 
-**Networking & Ingress** - Public URL with NGINX Ingress Controller and SSL/TLS
+**Ingress Rules & SSL/TLS** - Configure routing and HTTPS certificates
 
 ---
 
 ## Quick Links
 
-- [Initial Setup Guide](./initial-setup.md) - First-time installation
-- [Daily Startup Guide](./daily-startup.md) - Start work each day
+- [Initial Setup Guide](./initial-setup.md) - First-time installation (includes Ingress setup)
+- [Daily Startup Guide](./daily-startup.md) - Start work each day (includes Ingress access)
 - [Daily Cleanup Guide](./daily-cleanup.md) - End of day cleanup
 - [CI/CD Setup Guide](./ci-cd-setup.md) - GitHub Actions pipeline
 
-_Last updated: 2025-01-14_
+_Last updated: 2025-01-15_
