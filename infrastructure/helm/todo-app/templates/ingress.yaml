@@ -7,7 +7,8 @@ metadata:
   annotations:
     # NGINX Ingress specific annotations
     nginx.ingress.kubernetes.io/use-regex: "true"
-    # CORS settings
+    
+    # CORS settings - allow frontend to call backend API
     nginx.ingress.kubernetes.io/enable-cors: "true"
     nginx.ingress.kubernetes.io/cors-allow-origin: "*"
     nginx.ingress.kubernetes.io/cors-allow-methods: "GET, POST, PUT, DELETE, OPTIONS"
@@ -17,7 +18,9 @@ spec:
   rules:
     - http:
         paths:
-          # Health check for Load Balancer - goes to backend
+          # Azure Load Balancer health probe endpoint
+          # Critical: Must return 200 OK or traffic is blocked
+          # Routes to backend /healthz endpoint
           - path: /healthz
             pathType: Exact
             backend:
@@ -26,7 +29,9 @@ spec:
                 port:
                   number: 8000
           
-          # Backend API routes - /api/* goes to backend
+          # Backend API routes
+          # All paths starting with /api go to FastAPI backend
+          # Examples: /api/todos, /api/docs, /api/health
           - path: /api
             pathType: Prefix
             backend:
@@ -35,7 +40,9 @@ spec:
                 port:
                   number: 8000
           
-          # Frontend routes - everything else goes to frontend
+          # Frontend routes (catch-all)
+          # All other paths go to Next.js frontend
+          # Must be last due to Prefix matching
           - path: /
             pathType: Prefix
             backend:

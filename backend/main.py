@@ -9,9 +9,14 @@ from schemas import TodoCreate, TodoResponse
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
-# FastAPI application instance
+# FastAPI application instance with custom docs URL
 app = FastAPI(
-    title="Todo API", description="A simple todo application API", version="1.0.1"
+    title="Todo API",
+    description="A simple todo application API",
+    version="1.0.1",
+    docs_url="/api/docs",  # Swagger UI at /api/docs
+    redoc_url="/api/redoc",  # ReDoc at /api/redoc
+    openapi_url="/api/openapi.json",  # OpenAPI schema at /api/openapi.json
 )
 
 # Configure CORS - Allow all origins for now
@@ -24,7 +29,9 @@ app.add_middleware(
 )
 
 
-# Health check endpoint - verify API is running
+# General purpose health check endpoint
+# Used by: developers, monitoring tools, CI/CD pipelines
+# Can be used for manual health verification and debugging
 @app.get("/health")
 def health_check():
     """
@@ -34,7 +41,10 @@ def health_check():
     return {"status": "healthy"}
 
 
-# Azure Load Balancer health probe endpoint (same as /health)
+# Azure Load Balancer health probe endpoint
+# Used by: Azure Load Balancer infrastructure
+# Critical: Must return 200 OK or Load Balancer blocks traffic
+# Required for Ingress to function properly
 @app.get("/healthz")
 def healthz():
     """
