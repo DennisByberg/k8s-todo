@@ -175,17 +175,58 @@ az acr repository list --name acrk8stododev --output table
 
 ArgoCD will automatically sync and deploy the application from Git.
 
-### 8. Test AKS Deployment
+### 8. Install NGINX Ingress Controller (Optional)
+
+For public access without port-forwarding:
+
+```bash
+# Add Helm repository
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+# Install NGINX Ingress Controller
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz \
+  --set controller.replicaCount=2 \
+  --set controller.nodeSelector."kubernetes\.io/os"=linux \
+  --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux
+
+# Wait for Ingress Controller to be ready
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+
+# Get Public IP (takes 2-3 minutes)
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+
+# Example output:
+# NAME                       TYPE           EXTERNAL-IP    PORT(S)
+# ingress-nginx-controller   LoadBalancer   4.165.9.111    80:31049/TCP,443:31659/TCP
+```
+
+**Save the EXTERNAL-IP!** You'll need it for accessing your app.
+
+**Cost:** ~$22/month extra (Load Balancer $18 + Public IP $4) = **Total ~$87/month**
+
+### 9. Test AKS Deployment
 
 ```bash
 # Wait for pods
 kubectl get pods -n todo-app -w
 
-# Port-forward
+# Option A: Port-forward (free)
 kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
+
+# Option B: Public IP (if Ingress installed)
+export INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo "Frontend: http://$INGRESS_IP"
+curl http://$INGRESS_IP/api/todos
 ```
 
-Open http://localhost:3000
+Open http://localhost:3000 (port-forward) or http://4.165.9.111 (Ingress)
 
 ## ✅ Setup Complete
 

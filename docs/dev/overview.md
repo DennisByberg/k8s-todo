@@ -33,7 +33,15 @@ Azure Infrastructure (Terraform)
 CI/CD (GitHub Actions)
     ├── Build Docker images
     ├── Push to ACR
+    └── Trigger ArgoCD sync
+    ↓
+GitOps (ArgoCD)
+    ├── Auto-sync from Git
     └── Deploy to AKS
+    ↓
+Networking (NGINX Ingress)
+    ├── Azure Load Balancer (Public IP)
+    └── Route traffic to services
     ↓
 Application (Helm)
     ├── Backend (FastAPI + PostgreSQL)
@@ -50,14 +58,17 @@ Application (Helm)
 4. **GitHub Actions automatically:**
    - Builds Docker images
    - Pushes to ACR
+5. **ArgoCD automatically:**
+   - Detects Git changes
+   - Syncs Kubernetes resources
    - Deploys to AKS
-5. Verify deployment in AKS
+6. Access app via Public IP or custom domain
 
 ### Manual Workflow (When Needed)
 
 1. Develop and test locally with Docker Desktop
 2. Build Docker images
 3. Push images to ACR
-4. Deploy to AKS with Helm
+4. ArgoCD syncs from Git
 
 ---

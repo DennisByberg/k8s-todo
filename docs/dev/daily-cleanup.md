@@ -40,7 +40,7 @@ You can now quit Docker Desktop to free up system resources.
 
 ## ☁️ Azure (AKS)
 
-### Option 1: Keep Running (~$65/month)
+### Option 1: Keep Running (~$87/month)
 
 If you're actively working on the project:
 
@@ -54,10 +54,13 @@ If you're actively working on the project:
 - Instant startup tomorrow
 - All data persists
 - No re-deployment needed
+- Public IP stays the same
 
 **Cons:**
 
-- Costs ~$65/month even when idle
+- Costs ~$87/month even when idle
+  - $65 AKS cluster
+  - $22 Load Balancer + Public IP
 
 ### Option 2: Destroy Infrastructure (Recommended)
 
@@ -75,6 +78,20 @@ terraform destroy
 
 Type `yes` to confirm. This takes ~5 minutes.
 
+**What gets deleted:**
+
+- AKS cluster
+- Load Balancer
+- Public IP
+- ArgoCD (runs in AKS)
+- NGINX Ingress (runs in AKS)
+- All data (database, persistent volumes)
+
+**What stays:**
+
+- ACR (Container Registry with images)
+- Resource Group
+
 **Pros:**
 
 - No ongoing costs
@@ -84,4 +101,5 @@ Type `yes` to confirm. This takes ~5 minutes.
 
 - Takes 5-10 min to recreate tomorrow
 - All data is lost (database, persistent volumes)
-- Must rebuild and push images again
+- Public IP will change (need to update DNS if configured)
+- Must reinstall ArgoCD and NGINX Ingress

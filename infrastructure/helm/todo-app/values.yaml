@@ -2,7 +2,7 @@
 environment: dev
 
 # Image registry configuration
-imageRegistry: '' # Empty for local, acrk8stododev.azurecr.io for Azure
+imageRegistry: ''
 
 # Backend configuration
 backend:
@@ -59,8 +59,4 @@ postgres:
 
 # Ingress configuration
 ingress:
-  enabled: true
-  className: nginx
-  host: todo.local
-  tls:
-    enabled: false
+  enabled: true # Set to true to enable Ingress

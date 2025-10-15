@@ -164,7 +164,66 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 **Username**: admin  
 **Password**: (from above)
 
-### 6. Check Application Status
+### 6. Install NGINX Ingress (If First Time After Terraform Apply)
+
+For public access without port-forwarding:
+
+```bash
+# Check if already installed
+kubectl get namespace ingress-nginx
+
+# If not found, install:
+helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
+helm repo update
+
+helm upgrade --install ingress-nginx ingress-nginx/ingress-nginx \
+  --namespace ingress-nginx \
+  --create-namespace \
+  --set controller.service.annotations."service\.beta\.kubernetes\.io/azure-load-balancer-health-probe-request-path"=/healthz \
+  --set controller.replicaCount=2 \
+  --set controller.nodeSelector."kubernetes\.io/os"=linux \
+  --set defaultBackend.nodeSelector."kubernetes\.io/os"=linux
+
+# Wait for ready
+kubectl wait --namespace ingress-nginx \
+  --for=condition=ready pod \
+  --selector=app.kubernetes.io/component=controller \
+  --timeout=120s
+
+# Get Public IP (takes 2-3 minutes)
+kubectl get svc -n ingress-nginx ingress-nginx-controller
+```
+
+**Cost:** ~$22/month extra (Load Balancer + Public IP)
+
+### 7. Access Application
+
+**Option A: Port-forward (free, local only)**
+
+```bash
+# Terminal 1: Frontend
+kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
+
+# Terminal 2: Backend
+kubectl port-forward -n todo-app svc/todo-app-backend 8000:8000
+```
+
+**URLs:** http://localhost:3000 and http://localhost:8000/docs
+
+**Option B: Public IP (if Ingress installed)**
+
+```bash
+# Get Public IP
+export INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# Test backend
+curl http://$INGRESS_IP/api/todos
+
+# Access frontend in browser
+echo "Frontend: http://$INGRESS_IP"
+```
+
+### 8. Check Application Status
 
 ```bash
 # Check ArgoCD application
@@ -240,6 +299,9 @@ az acr repository show-tags --name acrk8stododev --repository todo-backend --out
 
 # ArgoCD UI
 kubectl port-forward svc/argocd-server -n argocd 8080:443
+
+# Get Public IP (if Ingress installed)
+kubectl get svc -n ingress-nginx ingress-nginx-controller
 ```
 
 ---
