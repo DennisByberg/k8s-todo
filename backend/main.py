@@ -34,6 +34,16 @@ def health_check():
     return {"status": "healthy"}
 
 
+# Azure Load Balancer health probe endpoint (same as /health)
+@app.get("/healthz")
+def healthz():
+    """
+    Health probe endpoint for Azure Load Balancer.
+    Returns status to verify API is running.
+    """
+    return {"status": "healthy"}
+
+
 # Get all todos endpoint
 @app.get("/api/todos", response_model=List[TodoResponse])
 def get_todos(db: Session = Depends(get_db)):
