@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+// Use relative URL when in production (same domain via Ingress)
+// Use localhost when in development (port-forwarding)
+const API_URL =
+  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+    ? '' // Empty string = relative URL (uses same domain)
+    : process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
 
 export interface Todo {
   id: number;
