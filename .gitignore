@@ -39,5 +39,6 @@ temp/
 tmp/
 *.tmp
 
-# Scripts - Local development and experimentation
+# Only this project
 scripts/
+private/
