@@ -77,10 +77,12 @@ Complete checklist for K8s Todo application deployment.
 
 - ✅ NGINX Ingress Controller installed
 - ✅ Azure Load Balancer created (Public IP assigned)
-- ⬜ Ingress rules configured
+- ✅ Ingress rules configured (`/healthz`, `/health`, `/api`, `/`)
+- ✅ CORS configured in Ingress
+- ✅ Health probes working (Load Balancer gets 200 OK)
+- ✅ Public URL accessible
 - ⬜ DNS configuration (optional)
 - ⬜ SSL/TLS certificates (Let's Encrypt)
-- ⬜ Public URL accessible
 
 ## Security
 
@@ -118,6 +120,7 @@ Complete checklist for K8s Todo application deployment.
 - ✅ CI/CD pipeline documentation
 - ✅ ArgoCD setup documented
 - ✅ Ingress setup documented
+- ✅ Ingress routing documented (`/healthz`, `/health`, `/api`, `/`)
 - ⬜ Architecture diagrams
 - ⬜ API documentation published
 
@@ -146,13 +149,14 @@ Complete checklist for K8s Todo application deployment.
 **CI/CD:** GitHub Actions (build images on push to main)  
 **GitOps:** ArgoCD (auto-sync from main branch)  
 **Ingress:** NGINX Ingress Controller (Public IP: 4.165.9.111)  
+**Public Access:** http://4.165.9.111 (Frontend), http://4.165.9.111/api/docs (Backend API)  
 **Cost:** ~$87/month (~$22 for Load Balancer + IP, destroy with `terraform destroy` when not in use)
 
 ---
 
 ## Next Priority
 
-**Ingress Rules & SSL/TLS** - Configure routing and HTTPS certificates
+**SSL/TLS Certificates** - Setup HTTPS with Let's Encrypt
 
 ---
 
