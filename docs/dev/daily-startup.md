@@ -14,7 +14,7 @@ Quick commands to get started each day.
 
 ### 1. Start Docker Desktop
 
-Start the Docker Desktop application and wait for Kubernetes to be ready.
+Start the Docker Desktop application and start the K8s cluster. Wait for it to be ready.
 
 ### 2. Switch Context
 

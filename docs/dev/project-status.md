@@ -81,8 +81,7 @@ Complete checklist for K8s Todo application deployment.
 - ✅ CORS configured in Ingress
 - ✅ Health probes working (Load Balancer gets 200 OK)
 - ✅ Public URL accessible
-- ⬜ DNS configuration (optional)
-- ⬜ SSL/TLS certificates (Let's Encrypt)
+- ⬜ HTTPS with custom domain (cert-manager, Let's Encrypt, DNS)
 
 ## Security
 
@@ -101,16 +100,11 @@ Complete checklist for K8s Todo application deployment.
 
 ## Monitoring & Logging
 
-- ⬜ Prometheus installed
-- ⬜ Grafana dashboards configured
-- ⬜ Azure Monitor integration
-- ⬜ Centralized logging (ELK/Loki)
+- Coming later...
 
 ## Scalability
 
-- ⬜ Horizontal Pod Autoscaler (HPA) configured
-- ⬜ Cluster Autoscaler enabled
-- ⬜ Load testing performed
+- Coming later...
 
 ## Documentation
 
@@ -148,23 +142,6 @@ Complete checklist for K8s Todo application deployment.
 **Replicas:** 2x Backend, 2x Frontend, 1x Postgres  
 **CI/CD:** GitHub Actions (build images on push to main)  
 **GitOps:** ArgoCD (auto-sync from main branch)  
-**Ingress:** NGINX Ingress Controller (Public IP: 4.165.9.111)  
-**Public Access:** http://4.165.9.111 (Frontend), http://4.165.9.111/api/docs (Backend API)  
+**Ingress:** NGINX Ingress Controller with Azure Load Balancer  
+**Public Access:** Get current IP with `kubectl get svc -n ingress-nginx ingress-nginx-controller`  
 **Cost:** ~$87/month (~$22 for Load Balancer + IP, destroy with `terraform destroy` when not in use)
-
----
-
-## Next Priority
-
-**SSL/TLS Certificates** - Setup HTTPS with Let's Encrypt
-
----
-
-## Quick Links
-
-- [Initial Setup Guide](./initial-setup.md) - First-time installation (includes Ingress setup)
-- [Daily Startup Guide](./daily-startup.md) - Start work each day (includes Ingress access)
-- [Daily Cleanup Guide](./daily-cleanup.md) - End of day cleanup
-- [CI/CD Setup Guide](./ci-cd-setup.md) - GitHub Actions pipeline
-
-_Last updated: 2025-01-15_
