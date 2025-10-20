@@ -81,7 +81,9 @@ Complete checklist for K8s Todo application deployment.
 - ✅ CORS configured in Ingress
 - ✅ Health probes working (Load Balancer gets 200 OK)
 - ✅ Public URL accessible
-- ⬜ HTTPS with custom domain (cert-manager, Let's Encrypt, DNS)
+- ✅ HTTPS with custom domain (cert-manager + Let's Encrypt)
+- ✅ TLS certificate auto-renewal configured (90 days)
+- ✅ DNS management documented (DuckDNS with manual IP updates)
 
 ## Security
 
@@ -143,5 +145,9 @@ Complete checklist for K8s Todo application deployment.
 **CI/CD:** GitHub Actions (build images on push to main)  
 **GitOps:** ArgoCD (auto-sync from main branch)  
 **Ingress:** NGINX Ingress Controller with Azure Load Balancer  
-**Public Access:** Get current IP with `kubectl get svc -n ingress-nginx ingress-nginx-controller`  
-**Cost:** ~$87/month (~$22 for Load Balancer + IP, destroy with `terraform destroy` when not in use)
+**HTTPS:** Let's Encrypt (auto-renewal every 90 days)  
+**Domain:** dennisbybergtodo.duckdns.org (free, requires manual IP update after terraform destroy/apply)  
+**Public Access:** https://dennisbybergtodo.duckdns.org  
+**Cost:** ~$87/month (~$22 for Load Balancer + IP, use `terraform destroy` when not in use)
+
+**Note:** Public IP changes on `terraform destroy/apply` - update DuckDNS manually (see daily-startup).
