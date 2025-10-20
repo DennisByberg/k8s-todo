@@ -59,4 +59,5 @@ postgres:
 
 # Ingress configuration
 ingress:
-  enabled: true # Set to true to enable Ingress
+  enabled: true
+  host: dennisbybergtodo.duckdns.org

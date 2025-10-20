@@ -32,6 +32,30 @@ kubectl get all -n todo-app
 kubectl delete namespace todo-app --force --grace-period=0
 ```
 
+### Stop Kubernetes Cluster
+
+```
+Docker Desktop → Kubernetes → Stop
+```
+
+### Clean Docker Resources (Optional)
+
+If you want to free up disk space:
+
+```bash
+# Stop and remove all running containers
+docker stop $(docker ps -aq)
+docker rm $(docker ps -aq)
+
+# Remove all images
+docker rmi $(docker images -aq) -f
+
+# Remove all volumes
+docker volume rm $(docker volume ls -q) -f
+
+# TODO: Remove builds
+```
+
 ### Stop Docker Desktop
 
 You can now quit Docker Desktop to free up system resources.
@@ -40,31 +64,7 @@ You can now quit Docker Desktop to free up system resources.
 
 ## ☁️ Azure (AKS)
 
-### Option 1: Keep Running (~$87/month)
-
-If you're actively working on the project:
-
-```bash
-# Just close your terminals
-# AKS keeps running, data persists
-```
-
-**Pros:**
-
-- Instant startup tomorrow
-- All data persists
-- No re-deployment needed
-- Public IP stays the same
-
-**Cons:**
-
-- Costs ~$87/month even when idle
-  - $65 AKS cluster
-  - $22 Load Balancer + Public IP
-
-### Option 2: Destroy Infrastructure (Recommended)
-
-If you won't work on this for a while:
+### Destroy Infrastructure
 
 ```bash
 cd infrastructure/terraform
@@ -78,28 +78,6 @@ terraform destroy
 
 Type `yes` to confirm. This takes ~5 minutes.
 
-**What gets deleted:**
+**Verify in Azure Portal:**
 
-- AKS cluster
-- Load Balancer
-- Public IP
-- ArgoCD (runs in AKS)
-- NGINX Ingress (runs in AKS)
-- All data (database, persistent volumes)
-
-**What stays:**
-
-- ACR (Container Registry with images)
-- Resource Group
-
-**Pros:**
-
-- No ongoing costs
-- Clean slate
-
-**Cons:**
-
-- Takes 5-10 min to recreate tomorrow
-- All data is lost (database, persistent volumes)
-- Public IP will change (need to update DNS if configured)
-- Must reinstall ArgoCD and NGINX Ingress
+After terraform destroy completes, double-check that resources are actually gone.
