@@ -73,5 +73,3 @@ git add .
 git commit -m "feat: add header"
 git push origin main
 ```
-
-**Result:** Live on https://dennisbybergtodo.duckdns.org within ~5 min 🚀
