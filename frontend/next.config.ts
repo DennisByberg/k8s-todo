@@ -1,4 +1,5 @@
 import type { NextConfig } from 'next';
+import packageJson from './package.json';
 
 const nextConfig: NextConfig = {
   // Enable standalone output for Docker
@@ -10,6 +11,11 @@ const nextConfig: NextConfig = {
   // Mantine optimization
   experimental: {
     optimizePackageImports: ['@mantine/core', '@mantine/hooks'],
+  },
+
+  // Expose app version from package.json
+  env: {
+    NEXT_PUBLIC_APP_VERSION: packageJson.version,
   },
 };
 
