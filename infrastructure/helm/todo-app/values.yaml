@@ -45,6 +45,10 @@ postgres:
   image:
     repository: postgres
     tag: '16-alpine'
+  auth:
+    username: postgres
+    password: postgres
+    database: todos
   persistence:
     enabled: true
     size: 5Gi

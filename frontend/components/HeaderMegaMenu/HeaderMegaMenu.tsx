@@ -26,7 +26,7 @@ export function HeaderMegaMenu() {
             <Group gap={'xs'}>
               <IconCheckbox size={30} stroke={1.5} />
               <Text size={'xl'} fw={700}>
-                Todo App
+                Todo App [v.0.0.1]
               </Text>
             </Group>
           </a>

@@ -85,13 +85,8 @@ cd infrastructure/terraform
 ```
 
 ```bash
-# Check status
-terraform show
-```
-
-```bash
-# Deploy if not running
-terraform apply
+# Check if infrastructure exists, deploy if missing
+terraform state list > /dev/null 2>&1 || terraform apply -auto-approve
 ```
 
 ### 2. Connect to AKS
@@ -229,12 +224,12 @@ kubectl get svc -n ingress-nginx ingress-nginx-controller
 # Get new Public IP
 export NEW_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 echo "New IP: $NEW_IP"
+```
 
-# Update DuckDNS manually:
+**Update DuckDNS manually:**
+
 1. Go to https://www.duckdns.org/
 2. Update your domain with the new IP
-3. Verify: nslookup dennisbybergtodo.duckdns.org
-```
 
 **Note:** DNS propagation takes ~1-2 minutes. Certificate will auto-renew once DNS is updated.
 
