@@ -4,13 +4,14 @@ Quick reference documentation for daily development workflow.
 
 ## 📚 Documentation
 
-| Document                              | Purpose                                   |
-| ------------------------------------- | ----------------------------------------- |
-| [Project Status](./project-status.md) | Current status and next steps             |
-| [Initial Setup](./initial-setup.md)   | First-time installation and configuration |
-| [Daily Startup](./daily-startup.md)   | Quick commands to start working           |
-| [Daily Cleanup](./daily-cleanup.md)   | End of day cleanup                        |
-| [CI/CD Setup](./ci-cd-setup.md)       | GitHub Actions pipeline documentation     |
+| Document                                      | Purpose                                   |
+| --------------------------------------------- | ----------------------------------------- |
+| [Project Status](./project-status.md)         | Current status and next steps             |
+| [Initial Setup](./initial-setup.md)           | First-time installation and configuration |
+| [Daily Startup](./daily-startup.md)           | Quick commands to start working           |
+| [Daily Cleanup](./daily-cleanup.md)           | End of day cleanup                        |
+| [CI/CD Setup](./ci-cd-setup.md)               | GitHub Actions pipeline documentation     |
+| [Frontend Dev Guide](./frontend-dev-guide.md) | Frontend development with hot reload      |
 
 ## 🎯 Quick Start
 
@@ -41,7 +42,7 @@ GitOps (ArgoCD)
     ↓
 Networking (NGINX Ingress)
     ├── Azure Load Balancer (Public IP)
-    └── Route traffic to services
+    └── HTTP traffic routing
     ↓
 Application (Helm)
     ├── Backend (FastAPI + PostgreSQL)

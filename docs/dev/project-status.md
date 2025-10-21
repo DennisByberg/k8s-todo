@@ -80,18 +80,7 @@ Complete checklist for K8s Todo application deployment.
 - ✅ Ingress rules configured (`/healthz`, `/health`, `/api`, `/`)
 - ✅ CORS configured in Ingress
 - ✅ Health probes working (Load Balancer gets 200 OK)
-- ✅ Public URL accessible
-- ✅ HTTPS with custom domain (cert-manager + Let's Encrypt)
-- ✅ TLS certificate auto-renewal configured (90 days)
-- ✅ DNS management documented (DuckDNS with manual IP updates)
-
-## Security
-
-- ✅ Secrets moved to Kubernetes Secrets
-- ⬜ Azure Key Vault integration
-- ⬜ RBAC configured
-- ⬜ Network Policies implemented
-- ⬜ Pod Security Policies
+- ✅ Public URL accessible (HTTP only)
 
 ## Database
 
@@ -99,14 +88,6 @@ Complete checklist for K8s Todo application deployment.
 - ⬜ Connection from AKS to Azure DB working
 - ⬜ Database backups configured
 - ⬜ Migration from in-cluster Postgres complete
-
-## Monitoring & Logging
-
-- Coming later...
-
-## Scalability
-
-- Coming later...
 
 ## Documentation
 
@@ -145,9 +126,8 @@ Complete checklist for K8s Todo application deployment.
 **CI/CD:** GitHub Actions (build images on push to main)  
 **GitOps:** ArgoCD (auto-sync from main branch)  
 **Ingress:** NGINX Ingress Controller with Azure Load Balancer  
-**HTTPS:** Let's Encrypt (auto-renewal every 90 days)  
-**Domain:** dennisbybergtodo.duckdns.org (free, requires manual IP update after terraform destroy/apply)  
-**Public Access:** https://dennisbybergtodo.duckdns.org  
+**Security:** Development mode (HTTP only, hardcoded credentials)  
+**Public Access:** http://<EXTERNAL-IP>  
 **Cost:** ~$87/month (~$22 for Load Balancer + IP, use `terraform destroy` when not in use)
 
-**Note:** Public IP changes on `terraform destroy/apply` - update DuckDNS manually (see daily-startup).
+**Note:** Public IP changes on `terraform destroy/apply`.

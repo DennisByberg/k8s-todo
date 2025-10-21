@@ -211,68 +211,7 @@ kubectl get svc -n ingress-nginx ingress-nginx-controller
 
 **Cost:** ~$22/month extra (Load Balancer $18 + Public IP $4) = **Total ~$87/month**
 
-### 9. Install cert-manager (For HTTPS)
-
-**Optional but recommended** for production-like HTTPS setup.
-
-```bash
-# Install cert-manager
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.0/cert-manager.yaml
-
-# Wait for cert-manager to be ready
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=300s
-
-# Verify installation
-kubectl get pods -n cert-manager
-```
-
-```bash
-# Create Let's Encrypt issuer
-kubectl apply -f infrastructure/k8s/letsencrypt-issuer.yaml
-
-# Verify issuer is ready
-kubectl get clusterissuer
-# NAME                READY   AGE
-# letsencrypt-prod    True    10s
-```
-
-**Note:** Make sure you've updated `infrastructure/k8s/letsencrypt-issuer.yaml` with your email address.
-
-### 10. Setup Custom Domain (For HTTPS)
-
-**Choose a free domain service:**
-
-1. Go to https://www.duckdns.org/
-2. Login with GitHub/Google
-3. Create subdomain (e.g., `yourname.duckdns.org`)
-4. Get Public IP: `kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}'`
-5. Update DuckDNS with your IP
-6. Update [`infrastructure/helm/todo-app/values.yaml`](infrastructure/helm/todo-app/values.yaml):
-
-```yaml
-ingress:
-  enabled: true
-  host: yourname.duckdns.org # Change this
-```
-
-7. Commit and push changes (ArgoCD will auto-sync)
-8. Wait ~2 minutes for certificate issuance
-
-**Verify HTTPS:**
-
-```bash
-# Check certificate status
-kubectl get certificate -n todo-app
-# NAME           READY   SECRET         AGE
-# todo-app-tls   True    todo-app-tls   2m
-
-# Access your app
-echo "https://yourname.duckdns.org"
-```
-
-Green lock = SUCCESS! 🎉
-
-### 11. Test AKS Deployment
+### 9. Test AKS Deployment
 
 ```bash
 # Wait for pods
@@ -287,10 +226,8 @@ echo "Frontend: http://$INGRESS_IP"
 curl http://$INGRESS_IP/api/todos
 ```
 
-Open http://localhost:3000 (port-forward) or http://4.165.9.111 (Ingress)
+Open http://localhost:3000 (port-forward) or http://<EXTERNAL-IP> (Ingress)
 
 ## ✅ Setup Complete
 
 You're ready for daily development! See [Daily Startup Guide](./daily-startup.md).
-
-**End of day?** Use [Daily Cleanup Guide](./daily-cleanup.md) to free resources.

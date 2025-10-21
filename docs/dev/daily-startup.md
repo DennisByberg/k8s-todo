@@ -218,59 +218,11 @@ kubectl wait --namespace ingress-nginx \
 kubectl get svc -n ingress-nginx ingress-nginx-controller
 ```
 
-**Important:** After `terraform destroy/apply`, the Public IP changes. Update DuckDNS:
+**Note:** After `terraform destroy/apply`, the Public IP changes. Get the new IP with the command above.
 
-```bash
-# Get new Public IP
-export NEW_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
-echo "New IP: $NEW_IP"
-```
+### 7. Access Application
 
-**Update DuckDNS manually:**
-
-1. Go to https://www.duckdns.org/
-2. Update your domain with the new IP
-
-**Note:** DNS propagation takes ~1-2 minutes. Certificate will auto-renew once DNS is updated.
-
-### 7. Install cert-manager (If First Time After Terraform Apply)
-
-**For HTTPS with Let's Encrypt:**
-
-```bash
-# Check if already installed
-kubectl get namespace cert-manager
-```
-
-```bash
-# If not found, install:
-kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.15.0/cert-manager.yaml
-
-# Wait for cert-manager to be ready
-kubectl wait --for=condition=ready pod -l app.kubernetes.io/instance=cert-manager -n cert-manager --timeout=300s
-
-# Apply Let's Encrypt issuer
-kubectl apply -f infrastructure/k8s/letsencrypt-issuer.yaml
-
-# Verify
-kubectl get clusterissuer
-kubectl get certificate -n todo-app
-```
-
-**Note:** Certificate issuance takes ~2 minutes after first deployment.
-
-### 8. Access Application
-
-**HTTPS (via custom domain):**
-
-```bash
-# Get your domain from values.yaml
-echo "https://$(grep 'host:' infrastructure/helm/todo-app/values.yaml | awk '{print $2}')"
-```
-
-Open in browser with HTTPS! 🔒
-
-**HTTP (via Public IP - fallback):**
+**HTTP (via Public IP):**
 
 ```bash
 # Get Public IP
@@ -283,7 +235,7 @@ curl http://$INGRESS_IP/api/todos
 echo "Frontend: http://$INGRESS_IP"
 ```
 
-### 9. Check Application Status
+### 8. Check Application Status
 
 Verify that ArgoCD has deployed the application correctly and pods are running healthy.
 
