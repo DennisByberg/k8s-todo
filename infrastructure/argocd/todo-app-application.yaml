@@ -4,15 +4,10 @@ metadata:
   name: todo-app
   namespace: argocd
 spec:
-  # ArgoCD project (default is always available)
   project: default
-
-  # Where the app should be deployed
   destination:
     namespace: todo-app
     server: https://kubernetes.default.svc
-
-  # Where the Helm chart lives in Git
   source:
     repoURL: https://github.com/DennisByberg/k8s-todo
     targetRevision: main
@@ -26,11 +21,9 @@ spec:
         frontend:
           image:
             pullPolicy: Always
-
-  # Sync policy
   syncPolicy:
     automated:
-      prune: true # Delete resources not in Git
-      selfHeal: true # Revert manual changes
+      prune: true
+      selfHeal: true
     syncOptions:
       - CreateNamespace=true
