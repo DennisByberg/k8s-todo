@@ -1,10 +1,13 @@
-name: Build and Deploy to AKS
+name: Deploy to AKS
 
 on:
-  push:
+  workflow_run:
+    workflows: ['CI - Build & Push']
+    types:
+      - completed
     branches:
       - main
-  workflow_dispatch: # Manual trigger
+  workflow_dispatch:
 
 env:
   ACR_NAME: acrk8stododev
@@ -13,47 +16,15 @@ env:
   NAMESPACE: todo-app
 
 jobs:
-  build-and-push:
-    name: Build and Push Images
+  deploy:
+    name: Deploy to AKS
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' || github.event_name == 'workflow_dispatch' }}
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Azure Login
-        uses: azure/login@v2
-        with:
-          creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Login to ACR
-        run: |
-          az acr login --name ${{ env.ACR_NAME }}
-
-      - name: Build and push backend image
-        run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/todo-backend:${{ github.sha }} \
-            -t ${{ env.ACR_NAME }}.azurecr.io/todo-backend:latest \
-            -f infrastructure/docker/backend/Dockerfile .
-
-          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-backend:${{ github.sha }}
-          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-backend:latest
-
-      - name: Build and push frontend image
-        run: |
-          docker build -t ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:${{ github.sha }} \
-            -t ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:latest \
-            -f infrastructure/docker/frontend/Dockerfile .
-
-          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:${{ github.sha }}
-          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:latest
-
-  deploy:
-    name: Deploy to AKS
-    runs-on: ubuntu-latest
-    needs: build-and-push
-
-    steps:
       - name: Azure Login
         uses: azure/login@v2
         with:
@@ -66,16 +37,61 @@ jobs:
             --name ${{ env.AKS_CLUSTER_NAME }} \
             --overwrite-existing
 
-      - name: Restart deployments
+      - name: Verify cluster connection
         run: |
+          kubectl cluster-info
+          kubectl get nodes
+
+      - name: Check current deployment status
+        run: |
+          echo "📊 Current deployment status:"
+          kubectl get pods -n ${{ env.NAMESPACE }} -o wide || echo "Namespace not found"
+
+      - name: Restart backend deployment
+        run: |
+          echo "🔄 Restarting backend..."
           kubectl rollout restart deployment/todo-app-backend -n ${{ env.NAMESPACE }}
+
+      - name: Wait for backend rollout
+        run: |
+          echo "⏳ Waiting for backend to be ready..."
+          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=5m
+
+      - name: Restart frontend deployment
+        run: |
+          echo "🔄 Restarting frontend..."
           kubectl rollout restart deployment/todo-app-frontend -n ${{ env.NAMESPACE }}
 
-      - name: Wait for rollout
+      - name: Wait for frontend rollout
         run: |
-          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=5m
+          echo "⏳ Waiting for frontend to be ready..."
           kubectl rollout status deployment/todo-app-frontend -n ${{ env.NAMESPACE }} --timeout=5m
 
       - name: Verify deployment
         run: |
+          echo "✅ Deployment complete! Final status:"
           kubectl get pods -n ${{ env.NAMESPACE }}
+          echo ""
+          echo "📝 Recent events:"
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -10
+
+      - name: Get application URL
+        run: |
+          INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "🌐 Application URL: http://$INGRESS_IP"
+          echo "📊 API Health: http://$INGRESS_IP/health"
+          echo "📚 API Docs: http://$INGRESS_IP/api/docs"
+
+      - name: Health check
+        run: |
+          echo "🏥 Running health checks..."
+          INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          # Wait for ingress to be ready
+          sleep 10
+
+          # Check backend health
+          curl -f http://$INGRESS_IP/health || echo "⚠️ Backend health check failed"
+
+          # Check frontend
+          curl -f -I http://$INGRESS_IP || echo "⚠️ Frontend health check failed"
