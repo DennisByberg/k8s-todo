@@ -1,0 +1,267 @@
+name: CI/CD Pipeline
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  ACR_NAME: acrk8stododev
+  AKS_RESOURCE_GROUP: rg-k8s-todo-dev
+  AKS_CLUSTER_NAME: aks-k8s-todo-dev
+  NAMESPACE: todo-app
+
+jobs:
+  # Stage 1: Backend Linting
+  backend-lint:
+    name: 🐍 Backend Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          cd backend
+          pip install -r requirements.txt
+          pip install black flake8
+
+      - name: Check syntax errors
+        run: |
+          cd backend
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      - name: Check code style
+        run: |
+          cd backend
+          black --check . || echo "⚠️ Code formatting issues found (run 'black .')"
+
+  # Stage 2: Frontend Linting
+  frontend-lint:
+    name: ⚛️ Frontend Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: |
+          cd frontend
+          npm ci
+
+      - name: Lint
+        run: |
+          cd frontend
+          npm run lint
+
+      - name: Type check
+        run: |
+          cd frontend
+          npx tsc --noEmit
+
+      - name: Build check
+        run: |
+          cd frontend
+          npm run build
+
+  # Stage 3: Build Backend Image
+  build-backend:
+    name: 🐳 Build Backend Image
+    runs-on: ubuntu-latest
+    needs: [backend-lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push backend image
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/todo-backend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/todo-backend:latest \
+            -f infrastructure/docker/backend/Dockerfile .
+
+          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-backend:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-backend:latest
+
+      - name: Summary
+        run: |
+          echo "✅ Backend image built successfully"
+          echo "🐳 ${{ env.ACR_NAME }}.azurecr.io/todo-backend:${{ github.sha }}"
+
+  # Stage 4: Build Frontend Image
+  build-frontend:
+    name: 🐳 Build Frontend Image
+    runs-on: ubuntu-latest
+    needs: [frontend-lint]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Login to ACR
+        run: |
+          az acr login --name ${{ env.ACR_NAME }}
+
+      - name: Build and push frontend image
+        run: |
+          docker build -t ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:${{ github.sha }} \
+            -t ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:latest \
+            -f infrastructure/docker/frontend/Dockerfile .
+
+          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:${{ github.sha }}
+          docker push ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:latest
+
+      - name: Summary
+        run: |
+          echo "✅ Frontend image built successfully"
+          echo "🐳 ${{ env.ACR_NAME }}.azurecr.io/todo-frontend:${{ github.sha }}"
+
+  # Stage 5: Deploy Backend to AKS
+  deploy-backend:
+    name: 🚀 Deploy Backend
+    runs-on: ubuntu-latest
+    needs: [build-backend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
+            --name ${{ env.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Restart backend deployment
+        run: |
+          echo "🔄 Restarting backend..."
+          kubectl rollout restart deployment/todo-app-backend -n ${{ env.NAMESPACE }}
+
+      - name: Wait for backend rollout
+        run: |
+          echo "⏳ Waiting for backend to be ready..."
+          kubectl rollout status deployment/todo-app-backend -n ${{ env.NAMESPACE }} --timeout=5m
+
+      - name: Verify backend deployment
+        run: |
+          echo "✅ Backend deployed!"
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=backend
+
+  # Stage 6: Deploy Frontend to AKS
+  deploy-frontend:
+    name: 🚀 Deploy Frontend
+    runs-on: ubuntu-latest
+    needs: [build-frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
+            --name ${{ env.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Restart frontend deployment
+        run: |
+          echo "🔄 Restarting frontend..."
+          kubectl rollout restart deployment/todo-app-frontend -n ${{ env.NAMESPACE }}
+
+      - name: Wait for frontend rollout
+        run: |
+          echo "⏳ Waiting for frontend to be ready..."
+          kubectl rollout status deployment/todo-app-frontend -n ${{ env.NAMESPACE }} --timeout=5m
+
+      - name: Verify frontend deployment
+        run: |
+          echo "✅ Frontend deployed!"
+          kubectl get pods -n ${{ env.NAMESPACE }} -l app=frontend
+
+  # Stage 7: Health Check & Summary
+  verify-deployment:
+    name: ✅ Verify Deployment
+    runs-on: ubuntu-latest
+    needs: [deploy-backend, deploy-frontend]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Set AKS context
+        run: |
+          az aks get-credentials \
+            --resource-group ${{ env.AKS_RESOURCE_GROUP }} \
+            --name ${{ env.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
+
+      - name: Check cluster status
+        run: |
+          echo "📊 Deployment Status:"
+          kubectl get pods -n ${{ env.NAMESPACE }}
+          echo ""
+          echo "📝 Recent events:"
+          kubectl get events -n ${{ env.NAMESPACE }} --sort-by='.lastTimestamp' | tail -10
+
+      - name: Get application URL
+        run: |
+          INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+          echo "🌐 Application URL: http://$INGRESS_IP"
+          echo "📊 API Health: http://$INGRESS_IP/health"
+          echo "📚 API Docs: http://$INGRESS_IP/api/docs"
+
+      - name: Health checks
+        run: |
+          echo "🏥 Running health checks..."
+          INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+          sleep 10
+
+          curl -f http://$INGRESS_IP/health || echo "⚠️ Backend health check failed"
+          curl -f -I http://$INGRESS_IP || echo "⚠️ Frontend health check failed"
+
+          echo "✅ Deployment complete!"

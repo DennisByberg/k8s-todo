@@ -18,6 +18,9 @@ export function HeaderMegaMenu() {
   const [drawerOpened, { toggle: toggleDrawer, close: closeDrawer }] =
     useDisclosure(false);
 
+  // Get version from environment variable (set in next.config.ts)
+  const appVersion = process.env.NEXT_PUBLIC_APP_VERSION || '0.0.0';
+
   return (
     <Box>
       <header className={classes.header}>
@@ -26,7 +29,7 @@ export function HeaderMegaMenu() {
             <Group gap={'xs'}>
               <IconCheckbox size={30} stroke={1.5} />
               <Text size={'xl'} fw={700}>
-                Todo App [v.0.0.1]
+                Todo App [v.{appVersion}]
               </Text>
             </Group>
           </a>
