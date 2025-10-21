@@ -24,8 +24,9 @@ spec:
             - sh
             - -c
             - |
+              echo "Waiting for postgres service to be ready..."
               until nc -z {{ .Release.Name }}-postgres 5432; do
-                echo "Waiting for postgres..."
+                echo "Postgres not ready yet, waiting..."
                 sleep 2
               done
               echo "Postgres is ready!"
