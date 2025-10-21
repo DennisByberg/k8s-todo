@@ -87,7 +87,7 @@ Complete checklist for K8s Todo application deployment.
 
 ## Security
 
-- ⬜ Secrets moved to Kubernetes Secrets
+- ✅ Secrets moved to Kubernetes Secrets
 - ⬜ Azure Key Vault integration
 - ⬜ RBAC configured
 - ⬜ Network Policies implemented
