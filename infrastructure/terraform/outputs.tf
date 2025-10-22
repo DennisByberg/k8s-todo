@@ -24,3 +24,16 @@ output "aks_kube_config" {
   value     = azurerm_kubernetes_cluster.main.kube_config_raw
   sensitive = true
 }
+
+output "postgres_server_fqdn" {
+  value = azurerm_postgresql_flexible_server.main.fqdn
+}
+
+output "postgres_database_name" {
+  value = azurerm_postgresql_flexible_server_database.todos.name
+}
+
+output "postgres_admin_username" {
+  value     = azurerm_postgresql_flexible_server.main.administrator_login
+  sensitive = true
+}

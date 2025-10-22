@@ -47,6 +47,7 @@ helm upgrade --install todo-app infrastructure/helm/todo-app \
   --namespace todo-app \
   --create-namespace \
   --set imageRegistry="" \
+  --set azurePostgres.enabled=false \
   --set backend.image.pullPolicy=IfNotPresent \
   --set frontend.image.pullPolicy=IfNotPresent
 
@@ -82,11 +83,12 @@ kubectl port-forward -n todo-app svc/todo-app-backend 8000:8000
 ```bash
 # Navigate to Terraform directory
 cd infrastructure/terraform
-```
 
-```bash
-# Check if infrastructure exists, deploy if missing
-terraform state list > /dev/null 2>&1 || terraform apply -auto-approve
+# Set PostgreSQL password for Azure DB
+export TF_VAR_postgres_admin_password="SuperSecret123!"
+
+# deploy
+terraform apply -auto-approve
 ```
 
 ### 2. Connect to AKS
@@ -122,8 +124,12 @@ az acr repository list --name acrk8stododev --output table
 ```
 
 ```bash
-# If empty or missing todo-backend/todo-frontend, build and push:
 cd ~/dev/k8s-todo
+```
+
+```bash
+# Login to Azure (required before ACR login)
+az login
 ```
 
 ```bash
@@ -152,18 +158,16 @@ az acr repository show-tags --name acrk8stododev --repository todo-backend --out
 ```bash
 # Create namespace
 kubectl create namespace argocd
-```
 
-```bash
 # Install ArgoCD and wait for pods to be ready
 kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo-cd/stable/manifests/install.yaml
 kubectl wait --for=condition=ready pod -l app.kubernetes.io/name=argocd-server -n argocd --timeout=300s
-```
 
-```bash
-# Create Application
+# Create Application with Azure DB enabled
 kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 ```
+
+**Note:** ArgoCD will deploy the app using Azure Database for PostgreSQL (not in-cluster).
 
 ### 5. Access ArgoCD UI (Optional)
 
@@ -246,15 +250,15 @@ kubectl get application -n argocd
 # Verify all pods are running (not CrashLoopBackOff or Pending)
 kubectl get pods -n todo-app
 
-# Check backend logs for errors or startup issues
-kubectl logs -n todo-app deployment/todo-app-backend --tail=50
+# Check backend logs for Azure DB connection
+kubectl logs -n todo-app deployment/todo-app-backend --tail=50 | grep -i postgres
 ```
 
 **Expected output:**
 
 - ArgoCD application shows `Synced` and `Healthy`
-- All pods show `Running` with `1/1` ready
-- Logs show successful database connection and server start
+- Backend pods show `Running` with `1/1` ready
+- Logs show successful connection to `psql-k8s-todo-dev.postgres.database.azure.com`
 
 ---
 

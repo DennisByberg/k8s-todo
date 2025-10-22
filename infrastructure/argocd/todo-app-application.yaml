@@ -5,25 +5,40 @@ metadata:
   namespace: argocd
 spec:
   project: default
-  destination:
-    namespace: todo-app
-    server: https://kubernetes.default.svc
   source:
     repoURL: https://github.com/DennisByberg/k8s-todo
     targetRevision: main
     path: infrastructure/helm/todo-app
     helm:
-      values: |
-        imageRegistry: "acrk8stododev.azurecr.io"
-        backend:
-          image:
-            pullPolicy: Always
-        frontend:
-          image:
-            pullPolicy: Always
+      valueFiles:
+        - values.yaml
+      parameters:
+        - name: imageRegistry
+          value: 'acrk8stododev.azurecr.io'
+        - name: azurePostgres.enabled
+          value: 'true'
+        - name: azurePostgres.host
+          value: 'psql-k8s-todo-dev.postgres.database.azure.com'
+        - name: azurePostgres.port
+          value: '5432'
+        - name: azurePostgres.database
+          value: 'todos'
+        - name: azurePostgres.username
+          value: 'psqladmin'
+        - name: azurePostgres.password
+          value: 'SuperSecret123!'
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: todo-app
   syncPolicy:
     automated:
       prune: true
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

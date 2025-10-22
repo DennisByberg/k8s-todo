@@ -1,4 +1,4 @@
-{{- if .Values.postgres.persistence.enabled }}
+{{- if and .Values.postgres.persistence.enabled (not .Values.azurePostgres.enabled) }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:

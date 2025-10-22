@@ -51,7 +51,5 @@ docker-compose.override.yml
 *.key
 *.crt
 secrets.yaml
-*-secret.yaml
 
 # Environment specific
-environments/*/secrets/

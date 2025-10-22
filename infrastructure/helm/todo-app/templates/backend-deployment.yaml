@@ -16,7 +16,8 @@ spec:
       labels:
         app: backend
     spec:
-      # Wait for postgres to be ready before starting backend
+      {{- if not .Values.azurePostgres.enabled }}
+      # Wait for postgres to be ready before starting backend (only for in-cluster postgres)
       initContainers:
         - name: wait-for-postgres
           image: busybox:1.36
@@ -30,6 +31,7 @@ spec:
                 sleep 2
               done
               echo "Postgres is ready!"
+      {{- end }}
       containers:
         - name: backend
           {{- if .Values.imageRegistry }}
@@ -43,8 +45,18 @@ spec:
               containerPort: 8000
               protocol: TCP
           env:
+            {{- if .Values.azurePostgres.enabled }}
+            # Use Azure Database for PostgreSQL
             - name: DATABASE_URL
-              value: "postgresql://postgres:postgres@{{ .Release.Name }}-postgres:5432/todos"
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Release.Name }}-azure-postgres
+                  key: DATABASE_URL
+            {{- else }}
+            # Use in-cluster PostgreSQL
+            - name: DATABASE_URL
+              value: "postgresql://{{ .Values.postgres.auth.username }}:{{ .Values.postgres.auth.password }}@{{ .Release.Name }}-postgres:5432/{{ .Values.postgres.auth.database }}"
+            {{- end }}
           livenessProbe:
             httpGet:
               path: /health

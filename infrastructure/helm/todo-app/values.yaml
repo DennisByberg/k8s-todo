@@ -61,6 +61,15 @@ postgres:
       memory: '512Mi'
       cpu: '500m'
 
+# Azure Database for PostgreSQL (managed service)
+azurePostgres:
+  enabled: false # Set to true when migrating from in-cluster Postgres
+  host: 'psql-k8s-todo-dev.postgres.database.azure.com'
+  port: '5432'
+  database: 'todos'
+  username: 'psqladmin'
+  password: 'admin123' # Will be set via --set flag
+
 # Ingress configuration
 ingress:
   enabled: true

@@ -16,11 +16,13 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ColorSchemeScript defaultColorScheme={'dark'} />
       </head>
       <body>
-        <MantineProvider defaultColorScheme={'dark'}>
-          <Notifications />
-          <HeaderMegaMenu />
-          <Providers>{children}</Providers>
-        </MantineProvider>
+        <Providers>
+          <MantineProvider defaultColorScheme={'dark'}>
+            <Notifications />
+            <HeaderMegaMenu />
+            {children}
+          </MantineProvider>
+        </Providers>
       </body>
     </html>
   );
