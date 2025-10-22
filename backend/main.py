@@ -2,12 +2,44 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
-from database import engine, get_db
+from database import engine, get_db, DATABASE_URL
 from models import Base, Todo
 from schemas import TodoCreate, TodoResponse
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
+
+
+# Parse database host from connection string for display
+def get_database_info() -> dict:
+    """Extract database connection info for health checks"""
+    try:
+        # DATABASE_URL format: postgresql://user:pass@host:port/dbname
+        if "postgres.database.azure.com" in DATABASE_URL:
+            return {
+                "type": "Azure Database for PostgreSQL",
+                "managed": True,
+                "host": (
+                    DATABASE_URL.split("@")[1].split(":")[0]
+                    if "@" in DATABASE_URL
+                    else "unknown"
+                ),
+            }
+        else:
+            return {
+                "type": "In-Cluster PostgreSQL",
+                "managed": False,
+                "host": (
+                    DATABASE_URL.split("@")[1].split(":")[0]
+                    if "@" in DATABASE_URL
+                    else "localhost"
+                ),
+            }
+    except Exception:
+        return {"type": "PostgreSQL", "managed": False, "host": "unknown"}
+
+
+db_info = get_database_info()
 
 # FastAPI application instance with custom docs URL
 app = FastAPI(
@@ -35,10 +67,10 @@ app.add_middleware(
 @app.get("/health")
 def health_check():
     """
-    Simple health check endpoint.
-    Returns status to verify API is running.
+    Simple health check endpoint with database information.
+    Returns status and database connection details.
     """
-    return {"status": "healthy"}
+    return {"status": "healthy", "database": db_info}
 
 
 # Azure Load Balancer health probe endpoint
@@ -49,7 +81,7 @@ def health_check():
 def healthz():
     """
     Health probe endpoint for Azure Load Balancer.
-    Returns status to verify API is running.
+    Returns minimal response to verify API is running.
     """
     return {"status": "healthy"}
 

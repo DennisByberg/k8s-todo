@@ -17,6 +17,24 @@ export interface CreateTodoData {
   completed: boolean;
 }
 
+export interface HealthResponse {
+  status: string;
+  database: {
+    type: string;
+    managed: boolean;
+    host: string;
+  };
+}
+
+// Fetch health check (includes database info)
+export async function getHealth(): Promise<HealthResponse> {
+  const response = await fetch(`${API_URL}/health`);
+
+  if (!response.ok) throw new Error('Failed to fetch health');
+
+  return response.json();
+}
+
 // Fetch all todos
 export async function getTodos(): Promise<Todo[]> {
   const response = await fetch(`${API_URL}/api/todos`);

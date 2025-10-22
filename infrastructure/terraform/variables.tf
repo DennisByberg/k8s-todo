@@ -21,3 +21,17 @@ variable "node_size" {
   type        = string
   default     = "Standard_B2s"
 }
+
+variable "postgres_admin_username" {
+  description = "PostgreSQL admin username"
+  type        = string
+  default     = "psqladmin"
+  sensitive   = true
+}
+
+variable "postgres_admin_password" {
+  description = "PostgreSQL admin password"
+  type        = string
+  default     = "SuperSecret123!"
+  sensitive   = true
+}
