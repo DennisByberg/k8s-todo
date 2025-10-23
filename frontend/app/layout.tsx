@@ -3,6 +3,7 @@ import { ColorSchemeScript, MantineProvider } from '@mantine/core';
 import { Notifications } from '@mantine/notifications';
 import { Providers } from './providers';
 import { HeaderMegaMenu } from '@/components/HeaderMegaMenu/HeaderMegaMenu';
+import { Footer } from '@/components/Footer/Footer';
 
 export const metadata = {
   title: 'Todo App',
@@ -15,12 +16,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         <ColorSchemeScript defaultColorScheme={'dark'} />
       </head>
-      <body>
+      <body
+        style={{
+          minHeight: '100vh',
+          display: 'flex',
+          flexDirection: 'column',
+          width: '100%',
+        }}
+      >
         <Providers>
           <MantineProvider defaultColorScheme={'dark'}>
             <Notifications />
             <HeaderMegaMenu />
-            {children}
+            <div style={{ flex: 1, width: '100%' }}>{children}</div>
+            <Footer />
           </MantineProvider>
         </Providers>
       </body>

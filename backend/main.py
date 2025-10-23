@@ -1,10 +1,10 @@
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List
 from database import engine, get_db, DATABASE_URL
 from models import Base, Todo
-from schemas import TodoCreate, TodoResponse
+from schemas import TodoCreate, TodoUpdate, TodoResponse
 
 # Create database tables
 Base.metadata.create_all(bind=engine)
@@ -45,7 +45,7 @@ db_info = get_database_info()
 app = FastAPI(
     title="Todo API",
     description="A simple todo application API",
-    version="1.0.1",
+    version="1.0.2",
     docs_url="/api/docs",  # Swagger UI at /api/docs
     redoc_url="/api/redoc",  # ReDoc at /api/redoc
     openapi_url="/api/openapi.json",  # OpenAPI schema at /api/openapi.json
@@ -115,6 +115,34 @@ def create_todo(todo: TodoCreate, db: Session = Depends(get_db)):
 
     # Add to database
     db.add(db_todo)
+    db.commit()
+    db.refresh(db_todo)
+
+    return db_todo
+
+
+# Update todo endpoint
+@app.put("/api/todos/{todo_id}", response_model=TodoResponse)
+def update_todo(todo_id: int, todo_update: TodoUpdate, db: Session = Depends(get_db)):
+    """
+    Update an existing todo item (toggle completed status).
+
+    Args:
+        todo_id: ID of the todo to update
+        todo_update: Updated completion status
+        db: Database session
+
+    Returns:
+        Updated todo item
+    """
+    db_todo = db.query(Todo).filter(Todo.id == todo_id).first()
+
+    if not db_todo:
+        raise HTTPException(status_code=404, detail="Todo not found")
+
+    # Only update completed status
+    db_todo.completed = todo_update.completed  # type: ignore
+
     db.commit()
     db.refresh(db_todo)
 
