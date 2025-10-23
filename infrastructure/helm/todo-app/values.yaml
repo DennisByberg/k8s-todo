@@ -10,7 +10,7 @@ backend:
   image:
     repository: todo-backend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always # Changed from IfNotPresent to Always
   service:
     type: ClusterIP
     port: 8000
@@ -28,7 +28,7 @@ frontend:
   image:
     repository: todo-frontend
     tag: latest
-    pullPolicy: IfNotPresent
+    pullPolicy: Always # Changed from IfNotPresent to Always
   service:
     type: ClusterIP
     port: 80
@@ -63,12 +63,12 @@ postgres:
 
 # Azure Database for PostgreSQL (managed service)
 azurePostgres:
-  enabled: false # Set to true when migrating from in-cluster Postgres
+  enabled: true
   host: 'psql-k8s-todo-dev.postgres.database.azure.com'
   port: '5432'
   database: 'todos'
   username: 'psqladmin'
-  password: 'admin123' # Will be set via --set flag
+  password: 'SuperSecret123!'
 
 # Ingress configuration
 ingress:
