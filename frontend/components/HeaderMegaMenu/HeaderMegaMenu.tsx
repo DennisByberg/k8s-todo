@@ -55,10 +55,12 @@ export function HeaderMegaMenu() {
           </Group>
 
           <Group visibleFrom={'sm'}>
-            <Button variant={'default'} onClick={() => {}}>
+            <Button disabled={true} variant={'default'} onClick={() => {}}>
               Log in
             </Button>
-            <Button onClick={() => {}}>Sign up</Button>
+            <Button disabled={true} onClick={() => {}}>
+              Sign up
+            </Button>
           </Group>
 
           <Burger opened={drawerOpened} onClick={toggleDrawer} hiddenFrom={'sm'} />
@@ -101,7 +103,9 @@ export function HeaderMegaMenu() {
             <Button variant={'default'} onClick={() => {}}>
               Log in
             </Button>
-            <Button onClick={() => {}}>Sign up</Button>
+            <Button disabled={true} onClick={() => {}}>
+              Sign up
+            </Button>
           </Group>
         </ScrollArea>
       </Drawer>
