@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getTodos, updateTodo } from '@/lib/api';
-import { Container, Text, Stack, Card, Checkbox } from '@mantine/core';
+import { Container, Text, Stack, Card, Checkbox, Loader, Center } from '@mantine/core';
 import { TodoForm } from './TodoForm';
 
 export function TodoList() {
@@ -31,7 +31,13 @@ export function TodoList() {
     toggleMutation.mutate({ id, completed: !currentCompleted });
   };
 
-  if (isLoading) return <Text>Loading todos...</Text>;
+  if (isLoading)
+    return (
+      <Center h={'50vh'}>
+        <Loader size={'xl'} type={'dots'} />
+      </Center>
+    );
+
   if (error) return <Text c={'red'}>Error loading todos</Text>;
 
   return (
