@@ -13,6 +13,14 @@ class TodoCreate(BaseModel):
     completed: bool = Field(default=False, description="Completion status")
 
 
+class TodoUpdate(BaseModel):
+    """
+    Schema for updating a todo item (only completed field).
+    """
+
+    completed: bool = Field(..., description="Completion status")
+
+
 class TodoResponse(BaseModel):
     """
     Schema for todo item response.
