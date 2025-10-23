@@ -384,3 +384,16 @@ kubectl port-forward svc/argocd-server -n argocd 8080:443
 kubectl port-forward -n todo-app svc/todo-app-frontend 3000:80
 kubectl port-forward -n todo-app svc/todo-app-backend 8000:8000
 ```
+
+### Quick Links (Azure via Ingress)
+
+```bash
+# Switch context and get IP
+kubectl config use-context aks-k8s-todo-dev
+export INGRESS_IP=$(kubectl get svc -n ingress-nginx ingress-nginx-controller -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+
+# Open links
+echo ""
+echo http://$INGRESS_IP              # Frontend
+echo http://$INGRESS_IP/api/docs     # Backend Swagger
+```
