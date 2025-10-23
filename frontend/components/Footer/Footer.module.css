@@ -8,11 +8,20 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: var(--mantine-spacing-xs);
+  gap: var(--mantine-spacing-sm);
   padding: var(--mantine-spacing-md);
+  flex-wrap: wrap;
+
+  @media (max-width: 64em) {
+    /* Tablet: Stack in 2 rows */
+    gap: var(--mantine-spacing-xs);
+    font-size: var(--mantine-font-size-sm);
+  }
 
   @media (max-width: 48em) {
+    /* Mobile: Full column */
     flex-direction: column;
     gap: var(--mantine-spacing-xs);
+    padding: var(--mantine-spacing-sm);
   }
 }

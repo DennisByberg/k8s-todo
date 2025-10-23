@@ -65,10 +65,6 @@ export async function createTodo(data: CreateTodoData): Promise<Todo> {
 
 // Update todo
 export async function updateTodo(id: number, data: UpdateTodoData): Promise<Todo> {
-  console.log('🔵 updateTodo called:', { id, data });
-  console.log('🔵 API_URL:', API_URL);
-  console.log('🔵 Full URL:', `${API_URL}/api/todos/${id}`);
-
   const response = await fetch(`${API_URL}/api/todos/${id}`, {
     method: 'PUT',
     headers: {
@@ -77,17 +73,11 @@ export async function updateTodo(id: number, data: UpdateTodoData): Promise<Todo
     body: JSON.stringify(data),
   });
 
-  console.log('🔵 Response status:', response.status);
-  console.log('🔵 Response ok:', response.ok);
-
   if (!response.ok) {
-    const errorText = await response.text();
-    console.error('❌ Update failed:', errorText);
     throw new Error('Failed to update todo');
   }
 
   const result = await response.json();
-  console.log('✅ Update success:', result);
 
   return result;
 }
