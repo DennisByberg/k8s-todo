@@ -169,6 +169,21 @@ kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 
 **Note:** ArgoCD will deploy the app using Azure Database for PostgreSQL (not in-cluster).
 
+### 4.1. Create Azure Database Secret
+
+```bash
+# Create Azure PostgreSQL connection secret
+kubectl create secret generic todo-app-azure-postgres \
+  --from-literal=DATABASE_URL='postgresql://psqladmin:SuperSecret123!@psql-k8s-todo-dev.postgres.database.azure.com:5432/todos?sslmode=require' \
+  --namespace todo-app \
+  --dry-run=client -o yaml | kubectl apply -f -
+
+# Verify secret was created
+kubectl get secret todo-app-azure-postgres -n todo-app
+```
+
+**Important:** This secret must exist BEFORE ArgoCD deploys the backend pods, otherwise they will use fallback in-cluster postgres.
+
 ### 5. Access ArgoCD UI (Optional)
 
 ```bash
