@@ -172,6 +172,9 @@ kubectl apply -f infrastructure/argocd/todo-app-application.yaml
 ### 4.1. Create Azure Database Secret
 
 ```bash
+# Ensure namespace exists first
+kubectl create namespace todo-app --dry-run=client -o yaml | kubectl apply -f -
+
 # Create Azure PostgreSQL connection secret
 kubectl create secret generic todo-app-azure-postgres \
   --from-literal=DATABASE_URL='postgresql://psqladmin:SuperSecret123!@psql-k8s-todo-dev.postgres.database.azure.com:5432/todos?sslmode=require' \
